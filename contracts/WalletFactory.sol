@@ -62,7 +62,7 @@ contract WalletFactory {
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
 
         // Compute the initialization code
-        bytes memory bytecode = getUserWalletCreationCode(signer);
+        bytes memory bytecode = getUserWalletCreationCode(clientId);
 
         // Deploy the contract using CREATE2
         walletAddress = Create2.deploy(0, salt, bytecode);
@@ -83,18 +83,18 @@ contract WalletFactory {
     ) external view returns (address) {
         address signer = ISignerRegistry(signerRegistry).getSigner(clientId);
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
-        bytes memory bytecode = getUserWalletCreationCode(signer);
+        bytes memory bytecode = getUserWalletCreationCode(clientId);
         bytes32 codeHash = keccak256(bytecode);
         return Create2.computeAddress(salt, codeHash, address(this));
     }
 
     /// @notice Generates the initialization code for the UserWallet
-    /// @param signer The signer address for the UserWallet
+    /// @param clientId The client ID for the UserWallet
     /// @return The initialization bytecode of the UserWallet
-    function getUserWalletCreationCode(address signer) internal view returns (bytes memory) {
+    function getUserWalletCreationCode(bytes32 clientId) internal view returns (bytes memory) {
         return abi.encodePacked(
             type(UserWallet).creationCode,
-            abi.encode(signer, relayer, contractRegistry)
+            abi.encode(clientId, relayer, contractRegistry, signerRegistry)
         );
     }
 
@@ -128,9 +128,5 @@ contract WalletFactory {
     /// @return The address of the user's wallet
     function getWallet(bytes32 clientId, bytes32 userId) external view returns (address) {
         return userWallets[clientId][userId];
-    }
-
-    function registerClient(bytes32 clientId, address signer) external onlyAdmin {
-        ISignerRegistry(signerRegistry).registerSigner(clientId, signer);
     }
 }

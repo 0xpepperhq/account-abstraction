@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./Types.sol"; // Import the Types library
 
 interface IContractRegistry {
     function isContractAllowed(bytes32 _clientId, address _contract) external view returns (bool);
@@ -18,9 +19,6 @@ contract UserWallet is ReentrancyGuard {
 
     bytes32 public clientId;
     address public relayer;
-
-    // Initialization flag
-    bool private initialized;
 
     // Reference to the ContractRegistry
     IContractRegistry public contractRegistry;
@@ -42,15 +40,6 @@ contract UserWallet is ReentrancyGuard {
         "ExecuteAction(address to,uint256 value,bytes data,uint256 nonce,ReimburseGas gas)ReimburseGas(uint256 gasPrice,uint256 gasLimit,bool reimburse,bool reimburseInNative,uint256 tokenRate,address token)"
     );
     bytes32 public DOMAIN_SEPARATOR;
-
-    struct ReimburseGas {
-        uint256 gasPrice;
-        uint256 gasLimit;
-        bool reimburse;
-        bool reimburseInNative;
-        uint256 tokenRate; // Tokens per wei (scaled by 1e18)
-        address token;
-    }
 
     // Events
     event Deposited(address indexed token, uint256 amount);
@@ -78,11 +67,14 @@ contract UserWallet is ReentrancyGuard {
     /// @param _clientId The client ID of the wallet
     /// @param _relayer The relayer address
     /// @param _contractRegistry The address of the ContractRegistry
+    /// @param _signerRegistry The address of the SignerRegistry
     constructor(
         bytes32 _clientId,
         address _relayer,
-        address _contractRegistry
+        address _contractRegistry,
+        address _signerRegistry
     ) {
+        signerRegistry = ISignerRegistry(_signerRegistry);
         address signer = signerRegistry.getSigner(_clientId);
 
         require(signer != address(0), "Invalid signer address");
@@ -119,14 +111,14 @@ contract UserWallet is ReentrancyGuard {
     /// @param value The amount of Ether to send with the call
     /// @param data The calldata to execute
     /// @param _nonce The user's nonce to prevent replay attacks
-    /// @param gas The gas reimbursement parameters
+    /// @param gasParams The gas reimbursement parameters
     /// @param signature The user's signature authorizing the action
     function executeAction(
         address to,
         uint256 value,
         bytes calldata data,
         uint256 _nonce,
-        ReimburseGas calldata gas,
+        Types.ReimburseGas calldata gasParams, // Use Types.ReimburseGas
         bytes calldata signature
     ) external payable onlyRelayer onlyAllowedContract(to) nonReentrant {
         // Record the initial gas
@@ -140,11 +132,11 @@ contract UserWallet is ReentrancyGuard {
         // Validate gas parameters
         uint256 MAX_GAS_PRICE = 200 gwei;
         uint256 MAX_GAS_LIMIT = 500000;
-        require(gas.gasPrice <= MAX_GAS_PRICE, "Gas price too high");
-        require(gas.gasLimit <= MAX_GAS_LIMIT, "Gas limit too high");
+        require(gasParams.gasPrice <= MAX_GAS_PRICE, "Gas price too high");
+        require(gasParams.gasLimit <= MAX_GAS_LIMIT, "Gas limit too high");
 
         // Verify the user's signature
-        bytes32 messageHash = getMessageHash(to, value, data, _nonce, gas);
+        bytes32 messageHash = getMessageHash(to, value, data, _nonce, gasParams);
         require(
             verifySignature(signer, messageHash, signature),
             "Invalid signature"
@@ -157,19 +149,19 @@ contract UserWallet is ReentrancyGuard {
         // Calculate gas used, including the gas overhead
         uint256 gasOverhead = 21000 + 10000; // Adjusted overhead
         uint256 gasUsed = initialGas - gasleft() + gasOverhead;
-        uint256 gasCost = gasUsed * gas.gasPrice;
+        uint256 gasCost = gasUsed * gasParams.gasPrice;
 
         // Reimburse the relayer
-        if (gas.reimburse) {
-            if (gas.reimburseInNative) {
+        if (gasParams.reimburse) {
+            if (gasParams.reimburseInNative) {
                 require(address(this).balance >= gasCost, "Insufficient balance for gas reimbursement");
                 (bool reimbursementSuccess, ) = payable(relayer).call{value: gasCost}("");
                 require(reimbursementSuccess, "Gas reimbursement failed");
             } else {
-                require(gas.token != address(0), "Invalid token address");
+                require(gasParams.token != address(0), "Invalid token address");
                 // tokenRate is tokens per wei, scaled by 1e18
-                IERC20 token = IERC20(gas.token);
-                uint256 tokenAmount = (gasCost * gas.tokenRate) / 1e18;
+                IERC20 token = IERC20(gasParams.token);
+                uint256 tokenAmount = (gasCost * gasParams.tokenRate) / 1e18;
                 require(token.balanceOf(address(this)) >= tokenAmount, "Insufficient token balance for gas reimbursement");
                 token.safeTransfer(relayer, tokenAmount);
             }
@@ -203,23 +195,23 @@ contract UserWallet is ReentrancyGuard {
     /// @param value The amount of Ether to send with the call
     /// @param data The calldata to execute
     /// @param _nonce The user's nonce
-    /// @param gas The gas reimbursement parameters
+    /// @param gasParams The gas reimbursement parameters
     function getMessageHash(
         address to,
         uint256 value,
         bytes calldata data,
         uint256 _nonce,
-        ReimburseGas calldata gas
+        Types.ReimburseGas calldata gasParams
     ) public view returns (bytes32) {
         bytes32 gasStructHash = keccak256(
             abi.encode(
                 REIMBURSE_GAS_TYPEHASH,
-                gas.gasPrice,
-                gas.gasLimit,
-                gas.reimburse,
-                gas.reimburseInNative,
-                gas.tokenRate,
-                gas.token
+                gasParams.gasPrice,
+                gasParams.gasLimit,
+                gasParams.reimburse,
+                gasParams.reimburseInNative,
+                gasParams.tokenRate,
+                gasParams.token
             )
         );
 
