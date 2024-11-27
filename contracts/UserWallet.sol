@@ -168,9 +168,10 @@ contract UserWallet is ReentrancyGuard {
             } else {
                 require(gas.token != address(0), "Invalid token address");
                 // tokenRate is tokens per wei, scaled by 1e18
+                IERC20 token = IERC20(gas.token);
                 uint256 tokenAmount = (gasCost * gas.tokenRate) / 1e18;
-                require(IERC20(gas.token).balanceOf(address(this)) >= tokenAmount, "Insufficient token balance for gas reimbursement");
-                IERC20(gas.token).safeTransfer(relayer, tokenAmount);
+                require(token.balanceOf(address(this)) >= tokenAmount, "Insufficient token balance for gas reimbursement");
+                token.safeTransfer(relayer, tokenAmount);
             }
         }
 
