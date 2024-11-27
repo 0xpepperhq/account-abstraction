@@ -6,13 +6,13 @@ import "forge-std/Test.sol";
 
 // Import the ContractRegistry and MockSignerRegistry contracts
 import "../contracts/ContractRegistry.sol";
-import "./MockSignerRegistry.sol";
+import "../contracts/SignerRegistry.sol";
 
 /// @title ContractRegistryTest
 /// @notice Test suite for the ContractRegistry contract.
 contract ContractRegistryTest is Test {
     ContractRegistry public contractRegistry;
-    MockSignerRegistry public mockSignerRegistry;
+    SignerRegistry public signerRegistry;
 
     address public admin = address(0x1);
     address public signer1 = address(0x2);
@@ -26,10 +26,10 @@ contract ContractRegistryTest is Test {
     /// @notice Runs before each test
     function setUp() public {
         // Deploy the mock SignerRegistry
-        mockSignerRegistry = new MockSignerRegistry();
+        signerRegistry = new SignerRegistry(admin);
 
         // Deploy the ContractRegistry with the mock SignerRegistry
-        contractRegistry = new ContractRegistry(address(mockSignerRegistry));
+        contractRegistry = new ContractRegistry(address(signerRegistry));
 
         // Label addresses for better readability in test outputs
         vm.label(admin, "Admin");
@@ -43,7 +43,7 @@ contract ContractRegistryTest is Test {
     function testOnlySignerCanSetAllowedContract() public {
         // Register signer1 for clientId1
         vm.prank(admin);
-        mockSignerRegistry.registerSigner(clientId1, signer1);
+        signerRegistry.registerSigner(clientId1, signer1);
 
         // Attempt to set allowed contract as signer1 (should succeed)
         vm.prank(signer1);
@@ -63,11 +63,11 @@ contract ContractRegistryTest is Test {
     function testSetAndGetAllowedContract() public {
         // Register signer1 for clientId1
         vm.prank(admin);
-        mockSignerRegistry.registerSigner(clientId1, signer1);
+        signerRegistry.registerSigner(clientId1, signer1);
 
         // Register signer2 for clientId2
         vm.prank(admin);
-        mockSignerRegistry.registerSigner(clientId2, signer2);
+        signerRegistry.registerSigner(clientId2, signer2);
 
         // Signer1 allows someContract for clientId1
         vm.prank(signer1);
@@ -89,7 +89,7 @@ contract ContractRegistryTest is Test {
     function testSetSameContractMultipleTimes() public {
         // Register signer1 for clientId1
         vm.prank(admin);
-        mockSignerRegistry.registerSigner(clientId1, signer1);
+        signerRegistry.registerSigner(clientId1, signer1);
 
         // Signer1 allows someContract
         vm.prank(signer1);
@@ -108,7 +108,7 @@ contract ContractRegistryTest is Test {
     function testNonSignerCannotSetAllowedContract() public {
         // Register signer1 for clientId1
         vm.prank(admin);
-        mockSignerRegistry.registerSigner(clientId1, signer1);
+        signerRegistry.registerSigner(clientId1, signer1);
 
         // Attempt to set allowed contract as a random address (should fail)
         vm.prank(address(0xBEEF));
@@ -120,10 +120,10 @@ contract ContractRegistryTest is Test {
     function testAllowedContractsPerClient() public {
         // Register signers for two different clients
         vm.prank(admin);
-        mockSignerRegistry.registerSigner(clientId1, signer1);
+        signerRegistry.registerSigner(clientId1, signer1);
 
         vm.prank(admin);
-        mockSignerRegistry.registerSigner(clientId2, signer2);
+        signerRegistry.registerSigner(clientId2, signer2);
 
         // Signer1 allows someContract for clientId1
         vm.prank(signer1);
@@ -145,7 +145,7 @@ contract ContractRegistryTest is Test {
     function testSetAllowedContractEmitsEvent() public {
         // Register signer1 for clientId1
         vm.prank(admin);
-        mockSignerRegistry.registerSigner(clientId1, signer1);
+        signerRegistry.registerSigner(clientId1, signer1);
 
         // Expect the ContractAllowed event to be emitted
         vm.expectEmit(true, false, false, true);
@@ -159,11 +159,11 @@ contract ContractRegistryTest is Test {
     /// @notice Test that the admin can change the signerRegistry address if needed
     function testChangeSignerRegistry() public {
         // Deploy a new MockSignerRegistry
-        MockSignerRegistry newMockSignerRegistry = new MockSignerRegistry();
+        SignerRegistry newSignerRegistry = new SignerRegistry(admin);
 
         // Register signer1 in the new SignerRegistry
         vm.prank(admin);
-        newMockSignerRegistry.registerSigner(clientId1, signer1);
+        newSignerRegistry.registerSigner(clientId1, signer1);
 
         // Attempt to change the signerRegistry in ContractRegistry
         // Note: The current ContractRegistry does not have a function to change signerRegistry
@@ -172,6 +172,6 @@ contract ContractRegistryTest is Test {
         // Hence, this test will pass by ensuring the signerRegistry remains unchanged.
 
         address currentSignerRegistry = address(contractRegistry.signerRegistry());
-        assertEq(currentSignerRegistry, address(mockSignerRegistry), "SignerRegistry should remain unchanged");
+        assertEq(currentSignerRegistry, address(signerRegistry), "SignerRegistry should remain unchanged");
     }
 }
