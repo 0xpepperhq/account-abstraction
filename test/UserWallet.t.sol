@@ -608,6 +608,10 @@ contract UserWalletTest is Test {
             token: address(0)
         });
 
+        vm.startPrank(signer);
+        userWallet.withdraw(address(0), 10 ether, payable(signer));
+        vm.stopPrank();
+
         // UserWallet has 10 ether initially, reimbursement is 100,000 * 100 gwei = 10,000,000 gwei = 10 ether
         // If we try to reimburse more than 10 ether, it should fail
 
@@ -960,16 +964,17 @@ contract MaliciousERC20 is IERC20 {
 }
 
 /// @title MockTargetContract
-/// @notice A mock contract with a foo() function for testing purposes
+/// @notice A mock contract with payable foo() and bar() functions for testing purposes
 contract MockTargetContract {
     event FooCalled();
 
-    function foo() external {
+    // Make foo() payable to accept Ether
+    function foo() external payable {
         emit FooCalled();
     }
 
-    function bar() external {
-        // This function can be empty or emit an event for testing
+    // Make bar() payable to accept Ether
+    function bar() external payable {
         emit FooCalled(); // Reusing the same event for simplicity
     }
 }
