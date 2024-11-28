@@ -53,9 +53,6 @@ contract WalletFactory {
     /// @param clientId The client ID
     /// @return walletAddress The address of the created wallet
     function createWallet(bytes32 userId, bytes32 clientId) external onlyAdmin returns (address walletAddress) {
-        address signer = ISignerRegistry(signerRegistry).getSigner(clientId);
-
-        require(signer != address(0), "Invalid signer address");
         require(userWallets[clientId][userId] == address(0), "Wallet already exists for this user");
 
         // Compute the salt from userId and clientId
@@ -81,7 +78,6 @@ contract WalletFactory {
         bytes32 userId,
         bytes32 clientId
     ) external view returns (address) {
-        address signer = ISignerRegistry(signerRegistry).getSigner(clientId);
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
         bytes memory bytecode = getUserWalletCreationCode(clientId);
         bytes32 codeHash = keccak256(bytecode);

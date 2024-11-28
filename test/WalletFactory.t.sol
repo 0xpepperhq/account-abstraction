@@ -76,7 +76,7 @@ contract WalletFactoryTest is Test {
     }
 
     /// @notice Test deployment and initial state
-    function testDeployment() public {
+    function testDeployment() public view {
         assertEq(walletFactory.admin(), admin, "Admin should be set correctly");
         assertEq(walletFactory.relayer(), relayer, "Relayer should be set correctly");
         assertEq(walletFactory.contractRegistry(), address(contractRegistry), "ContractRegistry should be set correctly");
@@ -294,7 +294,7 @@ contract WalletFactoryTest is Test {
     }
 
     /// @notice Test that getWallet returns zero address for non-existing wallet
-    function testGetWallet_ReturnsZeroAddress_ForNonExistingWallet() public {
+    function testGetWallet_ReturnsZeroAddress_ForNonExistingWallet() public view {
         bytes32 userId = userId2;
         bytes32 clientId = clientId1;
 
