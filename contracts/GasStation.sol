@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-interface ISignerRegistry {
-    function getSigner(bytes32 clientId) external view returns (address signer);
-}
+import "./interfaces/ISignerRegistry.sol";
 
 contract GasStation {
     address public admin;

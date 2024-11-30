@@ -1,23 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import {UserWallet} from "./UserWallet.sol";
+import {Wallet} from "./Wallet.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
-
-interface ISignerRegistry {
-    function getSigner(bytes32 clientId) external view returns (address signer);
-    function registerSigner(bytes32 clientId, address signer) external;
-}
 
 contract WalletFactory {
     address public admin;
     address public relayer;
     address public contractRegistry;
-    address public walletImplementation; // Address of the UserWallet implementation
     address public signerRegistry;
 
     // Mapping from off-chain client ids and user IDs to wallet addresses
-    mapping(bytes32 => mapping(bytes32 => address)) public userWallets;
+    mapping(bytes32 => mapping(bytes32 => address)) public wallets;
 
     // Events
     event WalletCreated(bytes32 indexed userId, bytes32 indexed clientId, address walletAddress);
@@ -34,26 +28,23 @@ contract WalletFactory {
         address _admin,
         address _relayer,
         address _contractRegistry,
-        address _walletImplementation,
         address _signerRegistry
     ) {
         require(_admin != address(0), "Invalid admin address");
         require(_relayer != address(0), "Invalid relayer address");
         require(_contractRegistry != address(0), "Invalid contract registry address");
-        require(_walletImplementation != address(0), "Invalid wallet implementation address");
         admin = _admin;
         relayer = _relayer;
         contractRegistry = _contractRegistry;
-        walletImplementation = _walletImplementation;
         signerRegistry = _signerRegistry;
     }
 
-    /// @notice Creates a new UserWallet using CREATE2 and maps it to the off-chain user ID
+    /// @notice Creates a new Wallet using CREATE2 and maps it to the off-chain user ID
     /// @param userId The off-chain user ID
     /// @param clientId The client ID
     /// @return walletAddress The address of the created wallet
     function createWallet(bytes32 userId, bytes32 clientId) external onlyAdmin returns (address walletAddress) {
-        require(userWallets[clientId][userId] == address(0), "Wallet already exists for this user");
+        require(wallets[clientId][userId] == address(0), "Wallet already exists for this user");
 
         // Compute the salt from userId and clientId
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
@@ -65,7 +56,7 @@ contract WalletFactory {
         walletAddress = Create2.deploy(0, salt, bytecode);
 
         // Map the userId to the wallet address
-        userWallets[clientId][userId] = walletAddress;
+        wallets[clientId][userId] = walletAddress;
 
         emit WalletCreated(userId, clientId, walletAddress);
     }
@@ -89,7 +80,7 @@ contract WalletFactory {
     /// @return The initialization bytecode of the UserWallet
     function getUserWalletCreationCode(bytes32 clientId) internal view returns (bytes memory) {
         return abi.encodePacked(
-            type(UserWallet).creationCode,
+            type(Wallet).creationCode,
             abi.encode(clientId, relayer, contractRegistry, signerRegistry)
         );
     }
@@ -123,6 +114,6 @@ contract WalletFactory {
     /// @param userId The off-chain user ID
     /// @return The address of the user's wallet
     function getWallet(bytes32 clientId, bytes32 userId) external view returns (address) {
-        return userWallets[clientId][userId];
+        return wallets[clientId][userId];
     }
 }

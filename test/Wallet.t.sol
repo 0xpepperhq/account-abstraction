@@ -4,20 +4,20 @@ pragma solidity ^0.8.17;
 // Import Foundry's Test framework
 import "forge-std/Test.sol";
 
-// Import the UserWallet and other contracts
-import {UserWallet} from "../contracts/UserWallet.sol";
+// Import the Wallet and other contracts
+import {Wallet} from "../contracts/Wallet.sol";
 import {ContractRegistry} from "../contracts/ContractRegistry.sol";
 import {SignerRegistry} from "../contracts/SignerRegistry.sol";
 import "../contracts/Types.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-contract UserWalletTest is Test {
+contract WalletTest is Test {
     using stdStorage for StdStorage;
     using SafeERC20 for IERC20;
 
     // Contracts under test
-    UserWallet public userWallet;
+    Wallet public wallet;
     ContractRegistry public contractRegistry;
     SignerRegistry public signerRegistry;
     MockTargetContract public mockTargetContract; // New mock contract
@@ -35,7 +35,7 @@ contract UserWalletTest is Test {
     bytes32 public userId = keccak256("User1");
 
     // EIP-712 domain parameters
-    string public constant name = "UserWallet";
+    string public constant name = "Wallet";
 
     // EIP-712 domain separator
     bytes32 public DOMAIN_SEPARATOR;
@@ -77,19 +77,19 @@ contract UserWalletTest is Test {
         contractRegistry.setAllowedContract(clientId, anotherContract, false); // Disallowed
         vm.stopPrank();
 
-        // Deploy UserWallet
-        userWallet = new UserWallet(clientId, relayer, address(contractRegistry), address(signerRegistry));
+        // Deploy Wallet
+        wallet = new Wallet(clientId, relayer, address(contractRegistry), address(signerRegistry));
 
-        // Fund UserWallet with ETH for reimbursements
-        vm.deal(address(userWallet), 10 ether);
+        // Fund Wallet with ETH for reimbursements
+        vm.deal(address(wallet), 10 ether);
 
         // Initialize DOMAIN_SEPARATOR
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
-                userWallet.DOMAIN_TYPEHASH(),
+                wallet.DOMAIN_TYPEHASH(),
                 keccak256(bytes(name)),
                 block.chainid,
-                address(userWallet)
+                address(wallet)
             )
         );
     }
@@ -105,7 +105,7 @@ contract UserWalletTest is Test {
         // Compute the message hash
         bytes32 gasStructHash = keccak256(
             abi.encode(
-                userWallet.REIMBURSE_GAS_TYPEHASH(),
+                wallet.REIMBURSE_GAS_TYPEHASH(),
                 gasParams.gasPrice,
                 gasParams.gasLimit,
                 gasParams.reimburse,
@@ -117,7 +117,7 @@ contract UserWalletTest is Test {
 
         bytes32 structHash = keccak256(
             abi.encode(
-                userWallet.EXECUTE_ACTION_TYPEHASH(),
+                wallet.EXECUTE_ACTION_TYPEHASH(),
                 to,
                 value,
                 keccak256(data),
@@ -127,7 +127,7 @@ contract UserWalletTest is Test {
         );
 
         bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", userWallet.DOMAIN_SEPARATOR(), structHash)
+            abi.encodePacked("\x19\x01", wallet.DOMAIN_SEPARATOR(), structHash)
         );
 
         // Sign the digest using the signer's private key
@@ -135,35 +135,35 @@ contract UserWalletTest is Test {
         return abi.encodePacked(r, s, v);
     }
 
-    /// @notice Test that the UserWallet is initialized correctly
+    /// @notice Test that the Wallet is initialized correctly
     function testInitialization() public {
-        assertEq(userWallet.clientId(), clientId, "ClientId should be set correctly");
-        assertEq(userWallet.relayer(), relayer, "Relayer should be set correctly");
-        assertEq(address(userWallet.contractRegistry()), address(contractRegistry), "ContractRegistry should be set correctly");
-        assertEq(address(userWallet.signerRegistry()), address(signerRegistry), "SignerRegistry should be set correctly");
-        assertEq(userWallet.nonce(), 0, "Initial nonce should be zero");
-        assertEq(userWallet.DOMAIN_SEPARATOR(), DOMAIN_SEPARATOR, "Domain separator should be initialized correctly");
+        assertEq(wallet.clientId(), clientId, "ClientId should be set correctly");
+        assertEq(wallet.relayer(), relayer, "Relayer should be set correctly");
+        assertEq(address(wallet.contractRegistry()), address(contractRegistry), "ContractRegistry should be set correctly");
+        assertEq(address(wallet.signerRegistry()), address(signerRegistry), "SignerRegistry should be set correctly");
+        assertEq(wallet.nonce(), 0, "Initial nonce should be zero");
+        assertEq(wallet.DOMAIN_SEPARATOR(), DOMAIN_SEPARATOR, "Domain separator should be initialized correctly");
     }
 
-    /// @notice Test that UserWallet can receive Ether via receive() function
+    /// @notice Test that Wallet can receive Ether via receive() function
     function testReceiveEther() public {
         vm.deal(address(this), 1 ether);
         vm.prank(address(this));
-        (bool sent, ) = address(userWallet).call{value: 1 ether}("");
+        (bool sent, ) = address(wallet).call{value: 1 ether}("");
         require(sent, "Failed to send Ether");
 
-        assertEq(address(userWallet).balance, 11 ether, "UserWallet should have received 1 ether");
+        assertEq(address(wallet).balance, 11 ether, "Wallet should have received 1 ether");
     }
 
-    /// @notice Test that UserWallet can receive Ether via fallback() function
+    /// @notice Test that Wallet can receive Ether via fallback() function
     function testFallbackEther() public {
         bytes memory data = hex"1234";
         vm.deal(address(this), 1 ether);
         vm.prank(address(this));
-        (bool sent, ) = address(userWallet).call{value: 1 ether}(data);
+        (bool sent, ) = address(wallet).call{value: 1 ether}(data);
         require(sent, "Failed to send Ether via fallback");
 
-        assertEq(address(userWallet).balance, 11 ether, "UserWallet should have received 1 ether via fallback");
+        assertEq(address(wallet).balance, 11 ether, "Wallet should have received 1 ether via fallback");
     }
 
     /// @notice Test that executeAction works correctly with valid parameters and signature
@@ -189,14 +189,14 @@ contract UserWalletTest is Test {
 
         // Expect ActionExecuted event
         vm.expectEmit(true, true, false, true);
-        emit UserWallet.ActionExecuted(to, value, callData);
+        emit Wallet.ActionExecuted(to, value, callData);
 
         // Prank as relayer and call executeAction
         vm.prank(relayer);
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
 
         // Verify nonce incremented
-        assertEq(userWallet.nonce(), 1, "Nonce should be incremented");
+        assertEq(wallet.nonce(), 1, "Nonce should be incremented");
 
         // Verify that targetContract received the Ether
         assertEq(targetContract.balance, 1 ether, "Target contract should have received 1 ether");
@@ -230,7 +230,7 @@ contract UserWalletTest is Test {
         // Prank as non-relayer and attempt to call executeAction
         vm.prank(nonSigner);
         vm.expectRevert("Not authorized");
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
     }
 
     /// @notice Test that executeAction reverts when called for a disallowed contract
@@ -257,7 +257,7 @@ contract UserWalletTest is Test {
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
         vm.expectRevert("Contract not allowed");
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
     }
 
     /// @notice Test that executeAction reverts with invalid signature
@@ -286,7 +286,7 @@ contract UserWalletTest is Test {
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
         vm.expectRevert("Invalid signature");
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
     }
 
     /// @notice Test that executeAction reverts with incorrect nonce
@@ -313,7 +313,7 @@ contract UserWalletTest is Test {
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
         vm.expectRevert("Invalid nonce");
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
     }
 
     /// @notice Test that executeAction reverts when gas price is too high
@@ -340,7 +340,7 @@ contract UserWalletTest is Test {
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
         vm.expectRevert("Gas price too high");
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
     }
 
     /// @notice Test that executeAction reverts when gas limit is too high
@@ -367,7 +367,7 @@ contract UserWalletTest is Test {
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
         vm.expectRevert("Gas limit too high");
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
     }
 
     /// @notice Test that executeAction reimburses relayer in native tokens correctly
@@ -393,22 +393,22 @@ contract UserWalletTest is Test {
 
         // Record relayer balance before
         uint256 relayerBalanceBefore = relayer.balance;
-        uint256 userWalletBalanceBefore = address(userWallet).balance;
+        uint256 userWalletBalanceBefore = address(wallet).balance;
 
         // Prank as relayer and call executeAction
         vm.prank(relayer);
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
 
         // Record relayer balance after
         uint256 relayerBalanceAfter = relayer.balance;
-        uint256 userWalletBalanceAfter = address(userWallet).balance;
+        uint256 userWalletBalanceAfter = address(wallet).balance;
 
         uint256 gasPaid = userWalletBalanceBefore - userWalletBalanceAfter;
         uint256 reimbursement = relayerBalanceAfter - relayerBalanceBefore;
 
-        assertGt(gasPaid, 0, "Gas should be paid by UserWallet");
+        assertGt(gasPaid, 0, "Gas should be paid by Wallet");
         assertEq(gasPaid, reimbursement, "Relayer should be reimbursed correctly");
-        assertLt(address(userWallet).balance, userWalletBalanceBefore, "UserWallet should have paid gas fees");
+        assertLt(address(wallet).balance, userWalletBalanceBefore, "Wallet should have paid gas fees");
     }
 
     /// @notice Test that withdraw function works correctly when called by signer
@@ -416,13 +416,13 @@ contract UserWalletTest is Test {
         address user10 = address(0x10);
         // Prank as signer and call withdraw
         vm.prank(signer);
-        userWallet.withdraw(address(0), 1 ether, payable(user10));
+        wallet.withdraw(address(0), 1 ether, payable(user10));
 
         // Verify that the recipient received Ether
         assertEq(user10.balance, 1 ether, "Recipient should have received 1 ether");
 
-        // Verify that UserWallet balance decreased
-        assertEq(address(userWallet).balance, 9 ether, "UserWallet balance should decrease by 1 ether");
+        // Verify that Wallet balance decreased
+        assertEq(address(wallet).balance, 9 ether, "Wallet balance should decrease by 1 ether");
     }
 
     /// @notice Test that withdraw function reverts when called by non-signer
@@ -430,36 +430,36 @@ contract UserWalletTest is Test {
         // Prank as non-signer and attempt to call withdraw
         vm.prank(nonSigner);
         vm.expectRevert("Not authorized");
-        userWallet.withdraw(address(0), 1 ether, payable(address(this)));
+        wallet.withdraw(address(0), 1 ether, payable(address(this)));
     }
 
     /// @notice Test that withdraw function works correctly for ERC20 tokens when called by signer
     function testWithdraw_Token_Success() public {
         // Deploy a mock ERC20 token
         MockERC20 token = new MockERC20("MockToken", "MTK", 18);
-        token.mint(address(userWallet), 1000 * 1e18);
+        token.mint(address(wallet), 1000 * 1e18);
 
         // Prank as signer and call withdraw
         vm.prank(signer);
-        userWallet.withdraw(address(token), 500 * 1e18, payable(address(this)));
+        wallet.withdraw(address(token), 500 * 1e18, payable(address(this)));
 
         // Verify that the recipient received tokens
         assertEq(token.balanceOf(address(this)), 500 * 1e18, "Recipient should have received 500 MTK");
 
-        // Verify that UserWallet token balance decreased
-        assertEq(token.balanceOf(address(userWallet)), 500 * 1e18, "UserWallet token balance should decrease by 500 MTK");
+        // Verify that Wallet token balance decreased
+        assertEq(token.balanceOf(address(wallet)), 500 * 1e18, "Wallet token balance should decrease by 500 MTK");
     }
 
     /// @notice Test that withdraw function reverts when called by non-signer for tokens
     function testWithdraw_Token_AsNonSigner_Revert() public {
         // Deploy a mock ERC20 token
         MockERC20 token = new MockERC20("MockToken", "MTK", 18);
-        token.mint(address(userWallet), 1000 * 1e18);
+        token.mint(address(wallet), 1000 * 1e18);
 
         // Prank as non-signer and attempt to call withdraw
         vm.prank(nonSigner);
         vm.expectRevert("Not authorized");
-        userWallet.withdraw(address(token), 500 * 1e18, payable(address(this)));
+        wallet.withdraw(address(token), 500 * 1e18, payable(address(this)));
     }
 
     /// @notice Test that setRelayer can be called by signer to update relayer
@@ -468,14 +468,14 @@ contract UserWalletTest is Test {
 
         // Expect RelayerChanged event
         vm.expectEmit(true, true, false, true);
-        emit UserWallet.RelayerChanged(relayer, newRelayer);
+        emit Wallet.RelayerChanged(relayer, newRelayer);
 
         // Prank as signer and call setRelayer
         vm.prank(signer);
-        userWallet.setRelayer(newRelayer);
+        wallet.setRelayer(newRelayer);
 
         // Verify relayer is updated
-        assertEq(userWallet.relayer(), newRelayer, "Relayer should be updated to newRelayer");
+        assertEq(wallet.relayer(), newRelayer, "Relayer should be updated to newRelayer");
     }
 
     /// @notice Test that setRelayer cannot be called by non-signer
@@ -485,7 +485,7 @@ contract UserWalletTest is Test {
         // Prank as non-signer and attempt to call setRelayer
         vm.prank(nonSigner);
         vm.expectRevert("Not authorized");
-        userWallet.setRelayer(newRelayer);
+        wallet.setRelayer(newRelayer);
     }
 
     /// @notice Test that setRelayer cannot set to zero address
@@ -495,34 +495,34 @@ contract UserWalletTest is Test {
         // Prank as signer and attempt to set relayer to zero address
         vm.prank(signer);
         vm.expectRevert("Invalid address");
-        userWallet.setRelayer(newRelayer);
+        wallet.setRelayer(newRelayer);
     }
 
-    /// @notice Test that withdraw Ether reverts if UserWallet has insufficient balance
+    /// @notice Test that withdraw Ether reverts if Wallet has insufficient balance
     function testWithdraw_Ether_InsufficientBalance_Revert() public {
         // Prank as signer and attempt to withdraw more Ether than available
         vm.prank(signer);
         vm.expectRevert("Insufficient balance");
-        userWallet.withdraw(address(0), 20 ether, payable(address(this)));
+        wallet.withdraw(address(0), 20 ether, payable(address(this)));
     }
 
-    /// @notice Test that withdraw Token reverts if UserWallet has insufficient token balance
+    /// @notice Test that withdraw Token reverts if Wallet has insufficient token balance
     function testWithdraw_Token_InsufficientBalance_Revert() public {
         // Deploy a mock ERC20 token
         MockERC20 token = new MockERC20("MockToken", "MTK", 18);
-        token.mint(address(userWallet), 1000 * 1e18);
+        token.mint(address(wallet), 1000 * 1e18);
 
         // Prank as signer and attempt to withdraw more tokens than available
         vm.prank(signer);
         vm.expectRevert("Insufficient balance");
-        userWallet.withdraw(address(token), 1500 * 1e18, payable(address(this)));
+        wallet.withdraw(address(token), 1500 * 1e18, payable(address(this)));
     }
 
     /// @notice Test that executeAction reimburses relayer in tokens correctly
     function testExecuteAction_ReimburseInTokens_Success() public {
         // Deploy a mock ERC20 token
         MockERC20 token = new MockERC20("MockToken", "MTK", 18);
-        token.mint(address(userWallet), 1000 * 1e18);
+        token.mint(address(wallet), 1000 * 1e18);
 
         // Prepare action parameters
         address to = targetContract;
@@ -548,7 +548,7 @@ contract UserWalletTest is Test {
 
         // Prank as relayer and call executeAction
         vm.prank(relayer);
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
 
         // Record relayer token balance after
         uint256 relayerBalanceAfter = token.balanceOf(relayer);
@@ -561,7 +561,7 @@ contract UserWalletTest is Test {
     function testExecuteAction_ReimburseInTokens_InsufficientBalance_Revert() public {
         // Deploy a mock ERC20 token
         MockERC20 token = new MockERC20("MockToken", "MTK", 18);
-        // Do not mint tokens to UserWallet
+        // Do not mint tokens to Wallet
 
         // Prepare action parameters
         address to = targetContract;
@@ -585,10 +585,10 @@ contract UserWalletTest is Test {
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
         vm.expectRevert("Insufficient token balance for gas reimbursement");
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
     }
 
-    /// @notice Test that executeAction reimburses relayer in native tokens correctly when UserWallet has insufficient balance
+    /// @notice Test that executeAction reimburses relayer in native tokens correctly when Wallet has insufficient balance
     function testExecuteAction_ReimburseInNative_InsufficientBalance_Revert() public {
         // Prepare action parameters
         address to = targetContract;
@@ -596,7 +596,7 @@ contract UserWalletTest is Test {
         bytes memory callData = abi.encodeWithSignature("foo()");
         uint256 _nonce = 0;
 
-        // Prepare gas reimbursement parameters with reimbursement higher than UserWallet balance
+        // Prepare gas reimbursement parameters with reimbursement higher than Wallet balance
         Types.ReimburseGas memory gasParams = Types.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
@@ -607,10 +607,10 @@ contract UserWalletTest is Test {
         });
 
         vm.startPrank(signer);
-        userWallet.withdraw(address(0), 10 ether, payable(signer));
+        wallet.withdraw(address(0), 10 ether, payable(signer));
         vm.stopPrank();
 
-        // UserWallet has 10 ether initially, reimbursement is 100,000 * 100 gwei = 10,000,000 gwei = 10 ether
+        // Wallet has 10 ether initially, reimbursement is 100,000 * 100 gwei = 10,000,000 gwei = 10 ether
         // If we try to reimburse more than 10 ether, it should fail
 
         // Prepare gas reimbursement parameters with gasLimit * gasPrice = 11 ether
@@ -622,7 +622,7 @@ contract UserWalletTest is Test {
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
         vm.expectRevert("Insufficient balance for gas reimbursement");
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
     }
 
     /// @notice Test that executeAction does not reimburse relayer when reimburse is false
@@ -651,7 +651,7 @@ contract UserWalletTest is Test {
 
         // Prank as relayer and call executeAction
         vm.prank(relayer);
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
 
         // Record relayer balance after
         uint256 relayerBalanceAfter = relayer.balance;
@@ -663,19 +663,19 @@ contract UserWalletTest is Test {
         assertEq(targetContract.balance, 1 ether, "Target contract should have received 1 ether");
     }
 
-    /// @notice Test that UserWallet's domain separator is correct
+    /// @notice Test that Wallet's domain separator is correct
     function testDomainSeparator() public {
-        // Use the known name "UserWallet" as it's hard-coded in the contract
+        // Use the known name "Wallet" as it's hard-coded in the contract
         bytes32 expectedDomainSeparator = keccak256(
             abi.encode(
-                userWallet.DOMAIN_TYPEHASH(),
-                keccak256(bytes("UserWallet")),
+                wallet.DOMAIN_TYPEHASH(),
+                keccak256(bytes("Wallet")),
                 block.chainid,
-                address(userWallet)
+                address(wallet)
             )
         );
 
-        assertEq(userWallet.DOMAIN_SEPARATOR(), expectedDomainSeparator, "Domain separator should be correct");
+        assertEq(wallet.DOMAIN_SEPARATOR(), expectedDomainSeparator, "Domain separator should be correct");
     }
 
     /// @notice Test that executeAction reverts when token address is invalid
@@ -702,14 +702,14 @@ contract UserWalletTest is Test {
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
         vm.expectRevert("Invalid token address"); // Expecting "Invalid token address"
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
     }
 
     /// @notice Test that executeAction reverts when token reimbursement fails due to transfer failure
     function testExecuteAction_ReimburseInTokens_TransferFailure_Revert() public {
         // Deploy a malicious ERC20 token that always reverts on transfer
         MaliciousERC20 token = new MaliciousERC20("MaliciousToken", "MAL", 18);
-        token.mint(address(userWallet), 1000 * 1e18);
+        token.mint(address(wallet), 1000 * 1e18);
 
         // Prepare action parameters
         address to = targetContract;
@@ -733,7 +733,7 @@ contract UserWalletTest is Test {
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
         vm.expectRevert("Transfer failed");
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
     }
 
     /// @notice Test that executeAction can be called multiple times with correct nonces
@@ -757,11 +757,11 @@ contract UserWalletTest is Test {
 
         // Expect ActionExecuted event
         vm.expectEmit(true, true, false, true);
-        emit UserWallet.ActionExecuted(to1, value1, callData1);
+        emit Wallet.ActionExecuted(to1, value1, callData1);
 
         // Prank as relayer and call executeAction first time
         vm.prank(relayer);
-        userWallet.executeAction{value: 0}(to1, value1, callData1, _nonce1, gasParams1, signature1);
+        wallet.executeAction{value: 0}(to1, value1, callData1, _nonce1, gasParams1, signature1);
 
         // Prepare second action
         address to2 = targetContract;
@@ -782,14 +782,14 @@ contract UserWalletTest is Test {
 
         // Expect ActionExecuted event
         vm.expectEmit(true, true, false, true);
-        emit UserWallet.ActionExecuted(to2, value2, callData2);
+        emit Wallet.ActionExecuted(to2, value2, callData2);
 
         // Prank as relayer and call executeAction second time
         vm.prank(relayer);
-        userWallet.executeAction{value: 0}(to2, value2, callData2, _nonce2, gasParams2, signature2);
+        wallet.executeAction{value: 0}(to2, value2, callData2, _nonce2, gasParams2, signature2);
 
         // Verify nonce is incremented correctly
-        assertEq(userWallet.nonce(), 2, "Nonce should be incremented correctly after multiple calls");
+        assertEq(wallet.nonce(), 2, "Nonce should be incremented correctly after multiple calls");
 
         // Verify that targetContract received both Ether transfers
         assertEq(targetContract.balance, 3 ether, "Target contract should have received total of 3 ether");
@@ -818,12 +818,12 @@ contract UserWalletTest is Test {
 
         // Prank as relayer and call executeAction first time
         vm.prank(relayer);
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
 
         // Attempt to reuse the same signature and nonce
         vm.prank(relayer);
         vm.expectRevert("Invalid nonce");
-        userWallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
+        wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
     }
 }
 
@@ -907,7 +907,7 @@ contract MaliciousERC20 is IERC20 {
         emit Transfer(address(0), to, amount);
     }
 
-    function transfer(address to, uint256 amount) external override returns (bool) {
+    function transfer(address to, uint256 amount) external pure override returns (bool) {
         revert("Transfer failed");
     }
 

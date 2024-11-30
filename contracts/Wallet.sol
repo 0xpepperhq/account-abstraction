@@ -4,17 +4,11 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./interfaces/ISignerRegistry.sol";
+import "./interfaces/IContractRegistry.sol";
 import "./Types.sol"; // Import the Types library
 
-interface IContractRegistry {
-    function isContractAllowed(bytes32 _clientId, address _contract) external view returns (bool);
-}
-
-interface ISignerRegistry {
-    function getSigner(bytes32 clientId) external view returns (address signer);
-}
-
-contract UserWallet is ReentrancyGuard {
+contract Wallet is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     bytes32 public clientId;
@@ -89,7 +83,7 @@ contract UserWallet is ReentrancyGuard {
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 DOMAIN_TYPEHASH,
-                keccak256(bytes("UserWallet")),
+                keccak256(bytes("Wallet")),
                 block.chainid,
                 address(this)
             )

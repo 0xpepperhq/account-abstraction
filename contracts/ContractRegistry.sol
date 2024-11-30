@@ -2,10 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-
-interface ISignerRegistry {
-    function getSigner(bytes32 clientId) external view returns (address signer);
-}
+import "./interfaces/ISignerRegistry.sol";
 
 contract ContractRegistry is ReentrancyGuard {
     // Signer Registry

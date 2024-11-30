@@ -2,8 +2,9 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "./interfaces/ISignerRegistry.sol";
 
-contract SignerRegistry is ReentrancyGuard {
+contract SignerRegistry is ISignerRegistry, ReentrancyGuard {
     address public admin;
 
     // Mapping of allowed contracts
