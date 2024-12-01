@@ -10,6 +10,7 @@ import {WalletFactory} from "../contracts/WalletFactory.sol";
 import {Wallet} from "../contracts/Wallet.sol";
 import {SignerRegistry} from "../contracts/SignerRegistry.sol";
 import {ContractRegistry} from "../contracts/ContractRegistry.sol";
+import {GasStation} from "../contracts/GasStation.sol";
 
 contract WalletFactoryTest is Test {
     WalletFactory public walletFactory;
@@ -378,6 +379,27 @@ contract WalletFactoryTest is Test {
 
         // Verify that computed address matches deployed address
         assertEq(computedAddress, deployedWalletAddress, "Computed address should match deployed address");
+    }
+
+    /// @notice Test that computeWalletAddress matches the deployed gas station address
+    function testComputeGasStationAddress_MatchesDeployedAddress() public {
+        bytes32 clientId = clientId1;
+
+        // Compute expected salt and wallet address
+        bytes32 salt = keccak256(abi.encodePacked(clientId));
+        // signerRegistry, admin, relayer
+        bytes memory bytecode = abi.encodePacked(type(GasStation).creationCode, abi.encode(address(signerRegistry), admin, relayer));
+        bytes32 codeHash = keccak256(bytecode);
+        address expectedWalletAddress = Create2.computeAddress(salt, codeHash, address(walletFactory));
+
+        // Prank as admin and create the wallet
+        vm.expectEmit(true, true, false, true);
+        emit WalletFactory.GasStationCreated(clientId, expectedWalletAddress);
+        vm.prank(signer1);
+        address deployedWalletAddress = walletFactory.createGasStation(clientId);
+
+        // Verify that computed address matches deployed address
+        assertEq(expectedWalletAddress, deployedWalletAddress, "Computed address should match deployed address");
     }
 
     /// @notice Test that creating a wallet with zero signer address reverts
