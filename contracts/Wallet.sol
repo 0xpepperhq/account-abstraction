@@ -42,6 +42,8 @@ contract Wallet is ReentrancyGuard {
     event RelayerChanged(address indexed oldRelayer, address indexed newRelayer);
     event ContractRegistryChanged(address indexed oldRegistry, address indexed newRegistry);
 
+    error ExecutionFailed(string returnData);
+
     modifier onlyRelayer() {
         require(msg.sender == relayer, "Not authorized");
         _;
@@ -137,8 +139,10 @@ contract Wallet is ReentrancyGuard {
         );
 
         // Execute the action
-        (bool success, ) = to.call{value: value}(data);
-        require(success, "Action execution failed");
+        (bool success, bytes memory returnData) = to.call{value: value}(data);
+        if (!success) {
+            revert ExecutionFailed(string(returnData));
+        }
 
         // Calculate gas used, including the gas overhead
         uint256 gasOverhead = 21000 + 10000; // Adjusted overhead

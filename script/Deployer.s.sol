@@ -7,6 +7,8 @@ import "../contracts/ContractRegistry.sol";
 import "../contracts/SignerRegistry.sol";
 import "../contracts/Wallet.sol";
 import "../contracts/WalletFactory.sol";
+import "../contracts/SignatureHelper.sol";
+import "../contracts/GasStationFactory.sol";
 
 contract Deployer is Script {
     function run() external {
@@ -31,5 +33,15 @@ contract Deployer is Script {
             address(signerRegistry)
         );
         console.log("WalletFactory deployed at:", address(walletFactory));
+
+        SignatureHelper signatureHelper = new SignatureHelper();
+        console.log("SignatureHelper deployed at:", address(signatureHelper));
+
+        GasStationFactory gasStationFactory = new GasStationFactory(
+            admin,
+            relayer,
+            address(signerRegistry)
+        );
+        console.log("GasStationFactory deployed at:", address(gasStationFactory));
     }
 }
