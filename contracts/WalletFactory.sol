@@ -52,21 +52,26 @@ contract WalletFactory {
     /// @param clientId The client ID
     /// @return walletAddress The address of the created wallet
     function createWallet(bytes32 userId, bytes32 clientId) external onlyAdmin returns (address walletAddress) {
-        require(wallets[clientId][userId] == address(0), "Wallet already exists for this user");
+        require(userId.length > 0, "Invalid userId");
+        require(clientId.length > 0, "Invalid clientId");
 
-        // Compute the salt from userId and clientId
-        bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
+        walletAddress = wallets[clientId][userId];
 
-        // Compute the initialization code
-        bytes memory bytecode = getUserWalletCreationCode(clientId);
+        if (walletAddress == address(0)) {
+            // Compute the salt from userId and clientId
+            bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
 
-        // Deploy the contract using CREATE2
-        walletAddress = Create2.deploy(0, salt, bytecode);
+            // Compute the initialization code
+            bytes memory bytecode = getUserWalletCreationCode(clientId);
 
-        // Map the userId to the wallet address
-        wallets[clientId][userId] = walletAddress;
+            // Deploy the contract using CREATE2
+            wallets[clientId][userId] = Create2.deploy(0, salt, bytecode);
 
-        emit WalletCreated(userId, clientId, walletAddress);
+            // Map the userId to the wallet address
+            walletAddress = wallets[clientId][userId];
+
+            emit WalletCreated(userId, clientId, walletAddress);
+        }
     }
 
     /// @notice Computes the address of the UserWallet for the given userId and clientId

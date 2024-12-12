@@ -49,7 +49,7 @@ $ anvil
 
 ```shell
 $ forge script script/Deployer.s.sol:Deployer --broadcast --account pepper-deployer --rpc-url https://rpc.sepolia-api.lisk.com
-$ forge verify-contract 0xf81093539691337D3b36d1561451DA66165e828F ./contracts/CrashGame.sol:CrashGame --constructor-args $(cast abi-encode "constructor(address)" 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722)--verifier blockscout --verifier-url https://sepolia-blockscout.lisk.com/api --chain 4202 --watch 
+$ forge verify-contract 0xB461E25623DFCC311C4eD11AD0163b6c9De0A266 contracts/WalletFactory.sol:WalletFactory --constructor-args $(cast abi-encode "constructor(address,address,address,address)" 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722 0x6C76a6B4137e6b1A554dAD212b46A40bBD72863B 0xbb3C288b261c5fbB83777181f6c321D1528E2960) --verifier blockscout --verifier-url https://sepolia-blockscout.lisk.com/api --chain 4202 --watch 
 ```
 
 ### Cast
