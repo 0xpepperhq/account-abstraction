@@ -24,7 +24,7 @@ contract Setup is Script {
 
         // Deploy ContractRegistry
         // address lotteryFactory = 0x7Cf08228EC01191c2693B9539D02B37DACCC3f24;
-        address eventFactory = 0xe34D26a7018382FbB8e0D3be55EB5D6073ff00D2;
+        address eventFactory = 0x827a01E3dEBdE2997C10d20b15a17b2615CBFFeF;
         // address freeToPlayToken = 0x9Ff6a0DC28dfc56858BDC677E77858E00BDF7D44;
 
         // ContractRegistry(contractRegistry).setAllowedContract(clientId, lotteryFactory, true);
