@@ -141,7 +141,13 @@ contract Wallet is ReentrancyGuard {
         // Execute the action
         (bool success, bytes memory returnData) = to.call{value: value}(data);
         if (!success) {
-            revert ExecutionFailed(string(returnData));
+            if (returnData.length > 0) {
+                assembly {
+                    revert(add(returnData, 32), mload(returnData))
+                }
+            } else {
+                revert("Call failed without revert message");
+            }
         }
 
         // Calculate gas used, including the gas overhead
