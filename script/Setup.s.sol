@@ -15,7 +15,7 @@ contract Setup is Script {
         vm.startBroadcast();
 
         address signerRegistry = 0x7B06b5f685AAA61528e754196d4FF2E296F88739;
-        address contractRegistry = 0x75C4A34B13a891679241A34bEfA3c5a83bFE032a;
+        address contractRegistry = 0x6913d1d62139585Cf07B17097dDc74ad7B7ABC4a;
         address signer = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
         bytes32 clientId = 0xb33237270006a2cb6b24935fc83a916d366f4c2a5b9ea8b91ea3b191606c11cf;
 
