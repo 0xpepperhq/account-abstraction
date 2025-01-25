@@ -24,10 +24,10 @@ contract Setup is Script {
 
         // Deploy ContractRegistry
         address lotteryFactory = 0x0b2cF496c65496b85CfEF8BFee438CfE8e49a56b;
-        address eventFactory = 0x870B48dF207E11302805A5D33FcE47B780329029;
+        address eventFactory = 0x91B5616C0ca61B6E04931a3084b47e9056b642f4;
         address freeToPlayToken = 0x9Ff6a0DC28dfc56858BDC677E77858E00BDF7D44;
-        address marketMaket = 0xb58bd982F522528a55e5132d5b07C7bcFE44427b;
-        address outcomeToken = 0x021837743e581E101189f6638db192A6dDaE85FB;
+        address marketMaket = 0x47244dAc9Ce6936Dc41d893A77f5dD8505d55e10;
+        address outcomeToken = 0x4299F63e5d4e2356860168386c8C983EDcE7D73a;
 
         ContractRegistry(contractRegistry).setAllowedContract(clientId, lotteryFactory, true);
         ContractRegistry(contractRegistry).setAllowedContract(clientId, eventFactory, true);
