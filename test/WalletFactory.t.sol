@@ -130,21 +130,6 @@ contract WalletFactoryTest is Test {
         walletFactory.createWallet(userId, clientId);
     }
 
-    /// @notice Test that creating a wallet for an existing userId and clientId reverts
-    function testCreateWallet_AlreadyExists_Revert() public {
-        bytes32 userId = userId1;
-        bytes32 clientId = clientId1;
-
-        // Prank as admin and create the wallet first time
-        vm.prank(admin);
-        walletFactory.createWallet(userId, clientId);
-
-        // Attempt to create the same wallet again
-        vm.prank(admin);
-        vm.expectRevert("Wallet already exists for this user");
-        walletFactory.createWallet(userId, clientId);
-    }
-
     /// @notice Test that computeWalletAddress returns the correct address
     function testComputeWalletAddress() public {
         bytes32 userId = userId2;

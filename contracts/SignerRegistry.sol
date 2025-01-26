@@ -10,6 +10,7 @@ contract SignerRegistry is ISignerRegistry, ReentrancyGuard {
     // Mapping of allowed contracts
     mapping(address => bool) private blocklistSigners;
     mapping(bytes32 => address) private signers;
+    mapping(address => mapping(address => bool)) private delegateSigners;
 
     // Events
     event SignerRegistered(bytes32 indexed clientId, address signer);
@@ -17,6 +18,14 @@ contract SignerRegistry is ISignerRegistry, ReentrancyGuard {
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "Not authorized");
+        _;
+    }
+
+    modifier onlySigner(bytes32 clientId) {
+        address signer = signers[clientId];
+        require(signer != address(0), "Signer not found");
+        require(!blocklistSigners[signer], "Signer is blocked");
+        require(signer == msg.sender, "Not authorized");
         _;
     }
 
@@ -30,7 +39,16 @@ contract SignerRegistry is ISignerRegistry, ReentrancyGuard {
     /// @param signer The contract address to allow or disallow
     function registerSigner(bytes32 clientId, address signer) external onlyAdmin nonReentrant {
         signers[clientId] = signer;
+        delegateSigners[signer][signer] = true;
         emit SignerRegistered(clientId, signer);
+    }
+
+    /// @notice Allows the admin to delegate signers
+    /// @param clientId The client ID
+    /// @param delegate The delegate address
+    function registerDelegateSigner(bytes32 clientId, address delegate) external onlySigner(clientId) nonReentrant {
+        address signer = signers[clientId];
+        delegateSigners[signer][delegate] = true;
     }
 
     /// @notice Get the signer for a client ID
@@ -40,6 +58,14 @@ contract SignerRegistry is ISignerRegistry, ReentrancyGuard {
         signer = signers[clientId];
         require(signer != address(0), "Signer not found");
         require(!blocklistSigners[signer], "Signer is blocked");
+    }
+
+    /// @notice Allows the admin to delegate signers
+    /// @param clientId The client ID
+    /// @param delegate The delegate address
+    function isDelegateSigner(bytes32 clientId, address delegate) external view returns (bool) {
+        address signer = signers[clientId];
+        return delegateSigners[signer][delegate];
     }
 
     /// @notice Allows the admin to block signers

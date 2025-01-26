@@ -14,20 +14,21 @@ contract Setup is Script {
     function run() external {
         vm.startBroadcast();
 
-        address signerRegistry = 0xC955532A0C0ffc9b9ac7aFFAcEA3832b2dBb85AD;
-        address contractRegistry = 0x485e770deDfeAc4aF621beC0a5e9366AfC7a6D37;
+        address signerRegistry = 0x95310aaC029CD393A227492628FD825DFE3a6d5D;
+        address contractRegistry = 0x7b33B1263901a8cDE3b986b046218f7E7132C479;
         address signer = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
         bytes32 clientId = 0xb33237270006a2cb6b24935fc83a916d366f4c2a5b9ea8b91ea3b191606c11cf;
 
-        // Deploy SignerRegistry
         SignerRegistry(signerRegistry).registerSigner(clientId, signer);
 
-        // Deploy ContractRegistry
-        address lotteryFactory = 0x0b2cF496c65496b85CfEF8BFee438CfE8e49a56b;
-        address eventFactory = 0x91B5616C0ca61B6E04931a3084b47e9056b642f4;
+        address lotteryFactory = 0x406907a0bb5163E38522724653c00B3cCD84aEbC;
+        address eventFactory = 0xD020E48dB59a046b496f4B1A8c6d45C2180666CF;
         address freeToPlayToken = 0x9Ff6a0DC28dfc56858BDC677E77858E00BDF7D44;
-        address marketMaket = 0x47244dAc9Ce6936Dc41d893A77f5dD8505d55e10;
-        address outcomeToken = 0x4299F63e5d4e2356860168386c8C983EDcE7D73a;
+        address marketMaket = 0xb012368792A26aba67a5DB3880d3B2643596E7F4;
+        address outcomeToken = 0xe40f8fDB01Ced6DcCf49Bb5c6D5f7168b6806aEd;
+
+        SignerRegistry(signerRegistry).registerDelegateSigner(clientId, lotteryFactory);
+        SignerRegistry(signerRegistry).registerDelegateSigner(clientId, eventFactory);
 
         ContractRegistry(contractRegistry).setAllowedContract(clientId, lotteryFactory, true);
         ContractRegistry(contractRegistry).setAllowedContract(clientId, eventFactory, true);

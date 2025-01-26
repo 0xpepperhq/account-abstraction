@@ -15,8 +15,8 @@ contract ContractRegistry is ReentrancyGuard {
     event ContractAllowed(address indexed _contract, bool _allowed);
     event AdminChanged(address indexed oldAdmin, address indexed newAdmin);
 
-    modifier onlySigner(bytes32 _clientId) {
-        require(signerRegistry.getSigner(_clientId) == msg.sender, "Not authorized");
+    modifier onlySignerDelegate(bytes32 _clientId) {
+        require(signerRegistry.isDelegateSigner(_clientId, msg.sender), "Not authorized");
         _;
     }
 
@@ -28,7 +28,7 @@ contract ContractRegistry is ReentrancyGuard {
     /// @notice Allows the admin to set allowed contracts
     /// @param _contract The contract address to allow or disallow
     /// @param _allowed Boolean indicating whether the contract is allowed
-    function setAllowedContract(bytes32 _clientId, address _contract, bool _allowed) external onlySigner(_clientId) nonReentrant {
+    function setAllowedContract(bytes32 _clientId, address _contract, bool _allowed) external onlySignerDelegate(_clientId) nonReentrant {
         clientAllowedContracts[_clientId][_contract] = _allowed;
         emit ContractAllowed(_contract, _allowed);
     }
