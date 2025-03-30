@@ -6,11 +6,27 @@ import {GasStation} from "./GasStation.sol";
 import {ISignerRegistry} from "./interfaces/ISignerRegistry.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 
+// CREATE3 deployer contract
+contract ProxyDeployer {
+    event Deployed(address addr);
+    
+    function deploy(bytes memory bytecode, bytes32 salt) external returns (address addr) {
+        assembly {
+            addr := create2(0, add(bytecode, 0x20), mload(bytecode), salt)
+            if iszero(extcodesize(addr)) {
+                revert(0, 0)
+            }
+        }
+        emit Deployed(addr);
+    }
+}
+
 contract WalletFactory {
     address public admin;
     address public relayer;
     address public contractRegistry;
     address public signerRegistry;
+    ProxyDeployer public deployer;
 
     // Mapping from off-chain client ids and user IDs to wallet addresses
     mapping(bytes32 => mapping(bytes32 => address)) public wallets;
@@ -21,6 +37,7 @@ contract WalletFactory {
     event RelayerChanged(address indexed oldRelayer, address indexed newRelayer);
     event ContractRegistryChanged(address indexed oldRegistry, address indexed newRegistry);
     event GasStationCreated(bytes32 indexed clientId, address gasStationAddress);
+    event DeployerCreated(address deployerAddress);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "Not authorized");
@@ -45,9 +62,13 @@ contract WalletFactory {
         relayer = _relayer;
         contractRegistry = _contractRegistry;
         signerRegistry = _signerRegistry;
+        
+        // Deploy the ProxyDeployer contract
+        deployer = new ProxyDeployer();
+        emit DeployerCreated(address(deployer));
     }
 
-    /// @notice Creates a new Wallet using CREATE2 and maps it to the off-chain user ID
+    /// @notice Creates a new Wallet using CREATE3 pattern and maps it to the off-chain user ID
     /// @param userId The off-chain user ID
     /// @param clientId The client ID
     /// @return walletAddress The address of the created wallet
@@ -58,23 +79,56 @@ contract WalletFactory {
         walletAddress = wallets[clientId][userId];
 
         if (walletAddress == address(0)) {
-            // Compute the salt from userId and clientId
+            // Generate a stable salt from userId and clientId - same across all chains
             bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
-
-            // Compute the initialization code
-            bytes memory bytecode = getUserWalletCreationCode(clientId);
-
-            // Deploy the contract using CREATE2
-            wallets[clientId][userId] = Create2.deploy(0, salt, bytecode);
-
+            
+            // First use the deployer to deploy a proxy contract
+            address proxy = deployProxy(salt);
+            
+            // Then use the proxy to deploy the actual wallet
+            bytes memory walletBytecode = getUserWalletCreationCode(clientId);
+            walletAddress = deployThroughProxy(proxy, walletBytecode);
+            
             // Map the userId to the wallet address
-            walletAddress = wallets[clientId][userId];
+            wallets[clientId][userId] = walletAddress;
 
             emit WalletCreated(userId, clientId, walletAddress);
         }
     }
+    
+    /// @notice Deploys a proxy contract using CREATE2
+    /// @param salt The salt for deterministic address
+    /// @return proxyAddress The address of the deployed proxy
+    function deployProxy(bytes32 salt) internal returns (address proxyAddress) {
+        // This is the bytecode of a minimal proxy contract that just delegates calls
+        bytes memory proxyCode = hex"3d602d80600a3d3981f3363d3d373d3d3d363d73bebebebebebebebebebebebebebebebebebebebe5af43d82803e903d91602b57fd5bf3";
+        
+        // Deploy the proxy
+        proxyAddress = address(deployer.deploy(proxyCode, salt));
+        return proxyAddress;
+    }
+    
+    /// @notice Uses the deployed proxy to deploy the actual wallet contract
+    /// @param proxy The address of the proxy
+    /// @param walletBytecode The bytecode of the wallet to deploy
+    /// @return walletAddress The address of the deployed wallet
+    function deployThroughProxy(address proxy, bytes memory walletBytecode) internal returns (address walletAddress) {
+        // The address is deterministic based on the deployed proxy
+        walletAddress = address(uint160(uint(keccak256(abi.encodePacked(
+            bytes1(0xd6), // prefix for CREATE
+            bytes1(0x94), // prefix for addresses
+            proxy,
+            bytes1(0x01)  // nonce 1
+        )))));
+        
+        // Execute deployment through the proxy
+        (bool success, ) = proxy.call(walletBytecode);
+        require(success, "Wallet deployment failed");
+        
+        return walletAddress;
+    }
 
-    /// @notice Computes the address of the UserWallet for the given userId and clientId
+    /// @notice Computes the address of the UserWallet for the given userId and clientId across any chain
     /// @param userId The off-chain user ID
     /// @param clientId The client ID
     /// @return The computed wallet address
@@ -83,9 +137,19 @@ contract WalletFactory {
         bytes32 clientId
     ) external view returns (address) {
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
-        bytes memory bytecode = getUserWalletCreationCode(clientId);
-        bytes32 codeHash = keccak256(bytecode);
-        return Create2.computeAddress(salt, codeHash, address(this));
+        
+        // First compute the proxy address
+        bytes memory proxyCode = hex"3d602d80600a3d3981f3363d3d373d3d3d363d73bebebebebebebebebebebebebebebebebebebebe5af43d82803e903d91602b57fd5bf3";
+        bytes32 proxyCodeHash = keccak256(proxyCode);
+        address proxy = Create2.computeAddress(salt, proxyCodeHash, address(deployer));
+        
+        // Then compute the wallet address based on the proxy address
+        return address(uint160(uint(keccak256(abi.encodePacked(
+            bytes1(0xd6), // prefix for CREATE
+            bytes1(0x94), // prefix for addresses
+            proxy,
+            bytes1(0x01)  // nonce 1
+        )))));
     }
 
     /// @notice Generates the initialization code for the UserWallet
