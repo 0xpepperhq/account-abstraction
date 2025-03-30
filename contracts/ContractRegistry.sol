@@ -6,7 +6,6 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
 import {ISignerRegistry} from "./interfaces/ISignerRegistry.sol";
 
-
 contract ContractRegistry is Initializable, UUPSUpgradeable, ReentrancyGuardUpgradeable {
     // Signer Registry
     ISignerRegistry public signerRegistry;

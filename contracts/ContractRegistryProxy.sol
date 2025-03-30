@@ -13,4 +13,3 @@ contract ContractRegistryProxy is ERC1967Proxy {
     /// @param _data The initialization data for the implementation
     constructor(address implementation, bytes memory _data) ERC1967Proxy(implementation, _data) {}
 }
-

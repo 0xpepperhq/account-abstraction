@@ -30,7 +30,8 @@ abstract contract Deployer is Script {
 
         // Deploy SignerRegistry proxy
         bytes memory signerRegistryData = abi.encodeWithSelector(SignerRegistry.initialize.selector);
-        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), signerRegistryData);
+        SignerRegistryProxy signerRegistryProxy =
+            new SignerRegistryProxy(address(signerRegistryImpl), signerRegistryData);
         console.log("SignerRegistry proxy deployed at:", address(signerRegistryProxy));
 
         // Deploy ContractRegistry implementation
@@ -38,10 +39,10 @@ abstract contract Deployer is Script {
         console.log("ContractRegistry implementation deployed at:", address(contractRegistryImpl));
 
         // Deploy ContractRegistry proxy
-        bytes memory contractRegistryData = abi.encodeWithSelector(
-            ContractRegistry.initialize.selector, admin, address(signerRegistryProxy)
-        );
-        ContractRegistryProxy contractRegistryProxy = new ContractRegistryProxy(address(contractRegistryImpl), contractRegistryData);
+        bytes memory contractRegistryData =
+            abi.encodeWithSelector(ContractRegistry.initialize.selector, admin, address(signerRegistryProxy));
+        ContractRegistryProxy contractRegistryProxy =
+            new ContractRegistryProxy(address(contractRegistryImpl), contractRegistryData);
         console.log("ContractRegistry proxy deployed at:", address(contractRegistryProxy));
 
         // Deploy WalletFactory implementation
@@ -50,7 +51,11 @@ abstract contract Deployer is Script {
 
         // Deploy WalletFactory proxy
         bytes memory walletFactoryData = abi.encodeWithSelector(
-            WalletFactory.initialize.selector, admin, relayer, address(contractRegistryProxy), address(signerRegistryProxy)
+            WalletFactory.initialize.selector,
+            admin,
+            relayer,
+            address(contractRegistryProxy),
+            address(signerRegistryProxy)
         );
         WalletFactoryProxy walletFactoryProxy = new WalletFactoryProxy(address(walletFactoryImpl), walletFactoryData);
         console.log("WalletFactory proxy deployed at:", address(walletFactoryProxy));
