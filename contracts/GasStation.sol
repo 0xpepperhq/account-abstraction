@@ -18,17 +18,17 @@ contract GasStation {
     event OwnerChanged(address indexed oldOwner, address indexed newOwner);
 
     modifier onlySigner(bytes32 _clientId) {
-        require(msg.sender == signerRegistry.getSigner(_clientId), "Not authorized");
+        require(msg.sender == signerRegistry.getSigner(_clientId), "Not authorized Signer");
         _;
     }
 
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Not authorized");
+        require(msg.sender == admin, "Not authorized Admin");
         _;
     }
 
     modifier onlyRelayer() {
-        require(msg.sender == relayer, "Not authorized");
+        require(msg.sender == relayer, "Not authorized Relayer");
         _;
     }
 

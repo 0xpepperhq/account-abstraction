@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./interfaces/ISignerRegistry.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ISignerRegistry} from "./interfaces/ISignerRegistry.sol";
 
-contract ContractRegistry is ReentrancyGuard {
+
+contract ContractRegistry is Initializable, UUPSUpgradeable, ReentrancyGuardUpgradeable {
     // Signer Registry
     ISignerRegistry public signerRegistry;
-
+    address public admin;
     // Mapping of allowed contracts
     mapping(bytes32 => mapping(address => bool)) private clientAllowedContracts;
 
@@ -16,13 +19,27 @@ contract ContractRegistry is ReentrancyGuard {
     event AdminChanged(address indexed oldAdmin, address indexed newAdmin);
 
     modifier onlySignerDelegate(bytes32 _clientId) {
-        require(signerRegistry.isDelegateSigner(_clientId, msg.sender), "Not authorized");
+        require(signerRegistry.isDelegateSigner(_clientId, msg.sender), "Not authorized Delegate");
         _;
     }
 
-    constructor(address _signerRegistry) {
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Not authorized Admin");
+        _;
+    }
+
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _admin, address _signerRegistry) public initializer {
         require(_signerRegistry != address(0), "Invalid signerRegistry address");
+
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
         signerRegistry = ISignerRegistry(_signerRegistry);
+        admin = _admin;
     }
 
     /// @notice Allows the admin to set allowed contracts
@@ -43,4 +60,7 @@ contract ContractRegistry is ReentrancyGuard {
     function isContractAllowed(bytes32 _clientId, address _contract) external view returns (bool) {
         return clientAllowedContracts[_clientId][_contract];
     }
+
+    /// @custom:oz-upgrades-allow-protected-functions
+    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {}
 }

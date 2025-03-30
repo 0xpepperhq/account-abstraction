@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./interfaces/ISignerRegistry.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {ISignerRegistry} from "./interfaces/ISignerRegistry.sol";
 
-contract SignerRegistry is ISignerRegistry, ReentrancyGuard {
+contract SignerRegistry is Initializable, UUPSUpgradeable, ReentrancyGuardUpgradeable, ISignerRegistry {
     address public admin;
 
     // Mapping of allowed contracts
@@ -17,7 +19,7 @@ contract SignerRegistry is ISignerRegistry, ReentrancyGuard {
     event AdminChanged(address indexed oldAdmin, address indexed newAdmin);
 
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Not authorized");
+        require(msg.sender == admin, "Not authorized Admin");
         _;
     }
 
@@ -25,12 +27,21 @@ contract SignerRegistry is ISignerRegistry, ReentrancyGuard {
         address signer = signers[clientId];
         require(signer != address(0), "Signer not found");
         require(!blocklistSigners[signer], "Signer is blocked");
-        require(signer == msg.sender, "Not authorized");
+        require(signer == msg.sender, "Not authorized Signer");
         _;
     }
 
-    constructor(address _admin) {
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(address _admin) public initializer {
         require(_admin != address(0), "Invalid admin address");
+
+        __UUPSUpgradeable_init();
+        __ReentrancyGuard_init();
+
         admin = _admin;
     }
 
@@ -81,4 +92,7 @@ contract SignerRegistry is ISignerRegistry, ReentrancyGuard {
         emit AdminChanged(admin, _newAdmin);
         admin = _newAdmin;
     }
+
+    /// @custom:oz-upgrades-allow-protected-functions
+    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {}
 }

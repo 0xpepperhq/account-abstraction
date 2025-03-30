@@ -23,12 +23,12 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
     event ContractRegistryChanged(address indexed oldRegistry, address indexed newRegistry);
 
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Not authorized");
+        require(msg.sender == admin, "Not authorized Admin");
         _;
     }
 
     modifier onlySigner(bytes32 clientId) {
-        require(ISignerRegistry(signerRegistry).getSigner(clientId) == msg.sender, "Not authorized");
+        require(ISignerRegistry(signerRegistry).getSigner(clientId) == msg.sender, "Not authorized Signer");
         _;
     }
 

@@ -10,12 +10,12 @@ import "../contracts/SignerRegistry.sol";
 import "../contracts/Wallet.sol";
 import "../contracts/WalletFactory.sol";
 import "../contracts/GasStationFactory.sol";
+import "../contracts/ContractRegistryProxy.sol";
+import "../contracts/SignerRegistryProxy.sol";
 
 abstract contract Deployer is Script {
     address admin;
     address relayer;
-    address signerRegistry;
-    address contractRegistry;
 
     function updateParams() internal virtual;
 
@@ -24,13 +24,33 @@ abstract contract Deployer is Script {
 
         vm.startBroadcast();
 
+        // Deploy SignerRegistry implementation
+        SignerRegistry signerRegistryImpl = new SignerRegistry();
+        console.log("SignerRegistry implementation deployed at:", address(signerRegistryImpl));
+
+        // Deploy SignerRegistry proxy
+        bytes memory signerRegistryData = abi.encodeWithSelector(SignerRegistry.initialize.selector);
+        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), signerRegistryData);
+        console.log("SignerRegistry proxy deployed at:", address(signerRegistryProxy));
+
+        // Deploy ContractRegistry implementation
+        ContractRegistry contractRegistryImpl = new ContractRegistry();
+        console.log("ContractRegistry implementation deployed at:", address(contractRegistryImpl));
+
+        // Deploy ContractRegistry proxy
+        bytes memory contractRegistryData = abi.encodeWithSelector(
+            ContractRegistry.initialize.selector, admin, address(signerRegistryProxy)
+        );
+        ContractRegistryProxy contractRegistryProxy = new ContractRegistryProxy(address(contractRegistryImpl), contractRegistryData);
+        console.log("ContractRegistry proxy deployed at:", address(contractRegistryProxy));
+
         // Deploy WalletFactory implementation
         WalletFactory walletFactoryImpl = new WalletFactory();
         console.log("WalletFactory implementation deployed at:", address(walletFactoryImpl));
 
         // Deploy WalletFactory proxy
         bytes memory walletFactoryData = abi.encodeWithSelector(
-            WalletFactory.initialize.selector, admin, relayer, address(contractRegistry), address(signerRegistry)
+            WalletFactory.initialize.selector, admin, relayer, address(contractRegistryProxy), address(signerRegistryProxy)
         );
         WalletFactoryProxy walletFactoryProxy = new WalletFactoryProxy(address(walletFactoryImpl), walletFactoryData);
         console.log("WalletFactory proxy deployed at:", address(walletFactoryProxy));
@@ -41,7 +61,7 @@ abstract contract Deployer is Script {
 
         // Deploy GasStationFactory proxy
         bytes memory gasStationFactoryData =
-            abi.encodeWithSelector(GasStationFactory.initialize.selector, admin, relayer, address(signerRegistry));
+            abi.encodeWithSelector(GasStationFactory.initialize.selector, admin, relayer, address(signerRegistryProxy));
         GasStationFactoryProxy gasStationFactoryProxy =
             new GasStationFactoryProxy(address(gasStationFactoryImpl), gasStationFactoryData);
         console.log("GasStationFactory proxy deployed at:", address(gasStationFactoryProxy));
@@ -52,7 +72,5 @@ contract DeployerTest is Deployer {
     function updateParams() internal override {
         admin = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
         relayer = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
-        signerRegistry = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
-        contractRegistry = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
     }
 }

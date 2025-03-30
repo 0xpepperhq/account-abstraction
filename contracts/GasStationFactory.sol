@@ -19,12 +19,12 @@ contract GasStationFactory is Initializable, UUPSUpgradeable {
     event RelayerChanged(address indexed oldRelayer, address indexed newRelayer);
 
     modifier onlyAdmin() {
-        require(msg.sender == admin, "Not authorized");
+        require(msg.sender == admin, "Not authorized Admin");
         _;
     }
 
     modifier onlySigner(bytes32 clientId) {
-        require(ISignerRegistry(signerRegistry).getSigner(clientId) == msg.sender, "Not authorized");
+        require(ISignerRegistry(signerRegistry).getSigner(clientId) == msg.sender, "Not authorized Signer");
         _;
     }
 

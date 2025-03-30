@@ -44,7 +44,7 @@ contract Wallet is ReentrancyGuard {
     error ExecutionFailed(string returnData);
 
     modifier onlyRelayer() {
-        require(msg.sender == relayer, "Not authorized");
+        require(msg.sender == relayer, "Not authorized Relayer");
         _;
     }
 
@@ -54,7 +54,7 @@ contract Wallet is ReentrancyGuard {
     }
 
     modifier onlySigner() {
-        require(msg.sender == signerRegistry.getSigner(clientId), "Not authorized");
+        require(msg.sender == signerRegistry.getSigner(clientId), "Not authorized Signer");
         _;
     }
 
