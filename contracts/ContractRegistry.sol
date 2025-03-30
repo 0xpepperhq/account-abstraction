@@ -60,6 +60,14 @@ contract ContractRegistry is Initializable, UUPSUpgradeable, ReentrancyGuardUpgr
         return clientAllowedContracts[_clientId][_contract];
     }
 
+    /// @notice Allows the admin to change the admin address
+    /// @param _newAdmin The new admin address
+    function setAdmin(address _newAdmin) external onlyAdmin {
+        require(_newAdmin != address(0), "Invalid admin address");
+        emit AdminChanged(admin, _newAdmin);
+        admin = _newAdmin;
+    }
+
     /// @custom:oz-upgrades-allow-protected-functions
     function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {}
 }
