@@ -44,7 +44,8 @@ contract GasStationTest is Test {
         // Deploy the MockSignerRegistry
         SignerRegistry signerRegistryImpl = new SignerRegistry();
         bytes memory initDataSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
-        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
+        SignerRegistryProxy signerRegistryProxy =
+            new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
         signerRegistry = SignerRegistry(address(signerRegistryProxy));
 
         // Register signers

@@ -30,13 +30,16 @@ contract ContractRegistryTest is Test {
         // Deploy the mock SignerRegistry
         SignerRegistry signerRegistryImpl = new SignerRegistry();
         bytes memory initDataSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
-        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
+        SignerRegistryProxy signerRegistryProxy =
+            new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
         signerRegistry = SignerRegistry(address(signerRegistryProxy));
 
         // Deploy the ContractRegistry with the mock SignerRegistry
         ContractRegistry contractRegistryImpl = new ContractRegistry();
-        bytes memory initDataContractRegistry = abi.encodeWithSignature("initialize(address,address)", admin, address(signerRegistry));
-        ContractRegistryProxy contractRegistryProxy = new ContractRegistryProxy(address(contractRegistryImpl), initDataContractRegistry);
+        bytes memory initDataContractRegistry =
+            abi.encodeWithSignature("initialize(address,address)", admin, address(signerRegistry));
+        ContractRegistryProxy contractRegistryProxy =
+            new ContractRegistryProxy(address(contractRegistryImpl), initDataContractRegistry);
         contractRegistry = ContractRegistry(address(contractRegistryProxy));
 
         // Label addresses for better readability in test outputs
@@ -169,7 +172,8 @@ contract ContractRegistryTest is Test {
         // Deploy a new MockSignerRegistry
         SignerRegistry newSignerRegistryIpml = new SignerRegistry();
         bytes memory initDataNewSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
-        SignerRegistryProxy newSignerRegistryProxy = new SignerRegistryProxy(address(newSignerRegistryIpml), initDataNewSignerRegistry);
+        SignerRegistryProxy newSignerRegistryProxy =
+            new SignerRegistryProxy(address(newSignerRegistryIpml), initDataNewSignerRegistry);
         SignerRegistry newSignerRegistry = SignerRegistry(address(newSignerRegistryProxy));
 
         // Register signer1 in the new SignerRegistry

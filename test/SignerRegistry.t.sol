@@ -9,6 +9,7 @@ import "../contracts/SignerRegistry.sol";
 import "../contracts/SignerRegistryProxy.sol";
 /// @title SignerRegistryTest
 /// @notice Test suite for the SignerRegistry contract.
+
 contract SignerRegistryTest is Test {
     SignerRegistry public signerRegistry;
 
@@ -37,7 +38,8 @@ contract SignerRegistryTest is Test {
         vm.startPrank(admin);
         SignerRegistry signerRegistryImpl = new SignerRegistry();
         bytes memory initDataSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
-        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
+        SignerRegistryProxy signerRegistryProxy =
+            new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
         signerRegistry = SignerRegistry(address(signerRegistryProxy));
         vm.stopPrank();
     }

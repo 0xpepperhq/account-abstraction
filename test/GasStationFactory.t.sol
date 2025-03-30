@@ -32,7 +32,8 @@ contract GasStationFactoryTest is Test {
         // Deploy SignerRegistry
         SignerRegistry signerRegistryImpl = new SignerRegistry();
         bytes memory initDataSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
-        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
+        SignerRegistryProxy signerRegistryProxy =
+            new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
         signerRegistry = SignerRegistry(address(signerRegistryProxy));
 
         // Deploy GasStationFactory with admin, relayer, and signerRegistry

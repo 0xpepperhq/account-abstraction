@@ -49,13 +49,16 @@ contract WalletFactoryTest is Test {
         // Deploy the SignerRegistry
         SignerRegistry signerRegistryImpl = new SignerRegistry();
         bytes memory initDataSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
-        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
+        SignerRegistryProxy signerRegistryProxy =
+            new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
         signerRegistry = SignerRegistry(address(signerRegistryProxy));
 
         // Deploy the ContractRegistry
         ContractRegistry contractRegistryImpl = new ContractRegistry();
-        bytes memory initDataContractRegistry = abi.encodeWithSignature("initialize(address,address)", admin, address(signerRegistry));
-        ContractRegistryProxy contractRegistryProxy = new ContractRegistryProxy(address(contractRegistryImpl), initDataContractRegistry);
+        bytes memory initDataContractRegistry =
+            abi.encodeWithSignature("initialize(address,address)", admin, address(signerRegistry));
+        ContractRegistryProxy contractRegistryProxy =
+            new ContractRegistryProxy(address(contractRegistryImpl), initDataContractRegistry);
         contractRegistry = ContractRegistry(address(contractRegistryProxy));
 
         // Prank as admin to register signers
