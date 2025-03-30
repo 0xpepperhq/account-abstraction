@@ -6,7 +6,7 @@ import "forge-std/Test.sol";
 
 // Import the SignerRegistry contract
 import "../contracts/SignerRegistry.sol";
-
+import "../contracts/SignerRegistryProxy.sol";
 /// @title SignerRegistryTest
 /// @notice Test suite for the SignerRegistry contract.
 contract SignerRegistryTest is Test {
@@ -35,19 +35,16 @@ contract SignerRegistryTest is Test {
 
         // Deploy the SignerRegistry contract with admin
         vm.startPrank(admin);
-        signerRegistry = new SignerRegistry(admin);
+        SignerRegistry signerRegistryImpl = new SignerRegistry();
+        bytes memory initDataSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
+        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
+        signerRegistry = SignerRegistry(address(signerRegistryProxy));
         vm.stopPrank();
     }
 
     /// @notice Test that the contract is deployed with the correct admin
     function testDeployment() public {
         assertEq(signerRegistry.admin(), admin, "Admin should be set correctly");
-    }
-
-    /// @notice Test that deploying with zero address as admin reverts
-    function testConstructor_RevertIfAdminZeroAddress() public {
-        vm.expectRevert("Invalid admin address");
-        new SignerRegistry(address(0));
     }
 
     /// @notice Test that only admin can register a signer

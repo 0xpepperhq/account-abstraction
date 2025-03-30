@@ -11,6 +11,8 @@ import {SignerRegistry} from "../contracts/SignerRegistry.sol";
 import "../contracts/Types.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SignerRegistryProxy} from "../contracts/SignerRegistryProxy.sol";
+import {ContractRegistryProxy} from "../contracts/ContractRegistryProxy.sol";
 
 contract WalletTest is Test {
     using stdStorage for StdStorage;
@@ -58,8 +60,15 @@ contract WalletTest is Test {
         vm.label(signer, "Signer"); // Update label to actual signer
 
         // Deploy SignerRegistry and ContractRegistry
-        signerRegistry = new SignerRegistry(admin);
-        contractRegistry = new ContractRegistry(address(signerRegistry));
+        SignerRegistry signerRegistryImpl = new SignerRegistry();
+        bytes memory initDataSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
+        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
+        signerRegistry = SignerRegistry(address(signerRegistryProxy));
+
+        ContractRegistry contractRegistryImpl = new ContractRegistry();
+        bytes memory initDataContractRegistry = abi.encodeWithSignature("initialize(address,address)", admin, address(signerRegistry));
+        ContractRegistryProxy contractRegistryProxy = new ContractRegistryProxy(address(contractRegistryImpl), initDataContractRegistry);
+        contractRegistry = ContractRegistry(address(contractRegistryProxy));
 
         // Register signer for clientId
         vm.startPrank(admin);

@@ -6,6 +6,7 @@ import {GasStation} from "../contracts/GasStation.sol";
 import {GasStationFactory} from "../contracts/GasStationFactory.sol";
 import {GasStationFactoryProxy} from "../contracts/GasStationFactoryProxy.sol";
 import {SignerRegistry} from "../contracts/SignerRegistry.sol";
+import {SignerRegistryProxy} from "../contracts/SignerRegistryProxy.sol";
 
 /**
  * @title GasStationFactoryTest
@@ -27,7 +28,10 @@ contract GasStationFactoryTest is Test {
 
     function setUp() public {
         // Deploy SignerRegistry
-        signerRegistry = new SignerRegistry(admin);
+        SignerRegistry signerRegistryImpl = new SignerRegistry();
+        bytes memory initDataSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
+        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
+        signerRegistry = SignerRegistry(address(signerRegistryProxy));
 
         // Deploy GasStationFactory with admin, relayer, and signerRegistry
         vm.startPrank(admin);

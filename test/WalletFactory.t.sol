@@ -12,6 +12,8 @@ import {Wallet} from "../contracts/Wallet.sol";
 import {SignerRegistry} from "../contracts/SignerRegistry.sol";
 import {ContractRegistry} from "../contracts/ContractRegistry.sol";
 import {GasStation} from "../contracts/GasStation.sol";
+import {SignerRegistryProxy} from "../contracts/SignerRegistryProxy.sol";
+import {ContractRegistryProxy} from "../contracts/ContractRegistryProxy.sol";
 
 contract WalletFactoryTest is Test {
     WalletFactory public walletFactory;
@@ -45,10 +47,16 @@ contract WalletFactoryTest is Test {
         vm.label(user2, "User2");
 
         // Deploy the SignerRegistry
-        signerRegistry = new SignerRegistry(admin);
+        SignerRegistry signerRegistryImpl = new SignerRegistry();
+        bytes memory initDataSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
+        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
+        signerRegistry = SignerRegistry(address(signerRegistryProxy));
 
         // Deploy the ContractRegistry
-        contractRegistry = new ContractRegistry(address(signerRegistry));
+        ContractRegistry contractRegistryImpl = new ContractRegistry();
+        bytes memory initDataContractRegistry = abi.encodeWithSignature("initialize(address,address)", admin, address(signerRegistry));
+        ContractRegistryProxy contractRegistryProxy = new ContractRegistryProxy(address(contractRegistryImpl), initDataContractRegistry);
+        contractRegistry = ContractRegistry(address(contractRegistryProxy));
 
         // Prank as admin to register signers
         vm.startPrank(admin);

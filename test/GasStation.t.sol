@@ -7,12 +7,13 @@ import "forge-std/Test.sol";
 // Import the GasStation and MockSignerRegistry contracts
 import "../contracts/GasStation.sol";
 import "../contracts/SignerRegistry.sol";
+import "../contracts/SignerRegistryProxy.sol";
 
 /// @title GasStationTest
 /// @notice Test suite for the GasStation contract.
 contract GasStationTest is Test {
     GasStation public gasStation;
-    SignerRegistry public mockSignerRegistry;
+    SignerRegistry public signerRegistry;
 
     // Define test addresses
     address public admin = address(0x1);
@@ -41,17 +42,20 @@ contract GasStationTest is Test {
         vm.label(someContract, "SomeContract");
 
         // Deploy the MockSignerRegistry
-        mockSignerRegistry = new SignerRegistry(admin);
+        SignerRegistry signerRegistryImpl = new SignerRegistry();
+        bytes memory initDataSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
+        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
+        signerRegistry = SignerRegistry(address(signerRegistryProxy));
 
         // Register signers
         vm.prank(admin);
-        mockSignerRegistry.registerSigner(clientId1, signer1);
+        signerRegistry.registerSigner(clientId1, signer1);
 
         vm.prank(admin);
-        mockSignerRegistry.registerSigner(clientId2, signer2);
+        signerRegistry.registerSigner(clientId2, signer2);
 
         // Deploy the GasStation contract with mock SignerRegistry, admin, relayer
-        gasStation = new GasStation(address(mockSignerRegistry), admin, relayer);
+        gasStation = new GasStation(address(signerRegistry), admin, relayer);
 
         // Fund the GasStation with 1 ether
         vm.deal(address(gasStation), 1 ether);
@@ -62,7 +66,7 @@ contract GasStationTest is Test {
         assertEq(gasStation.admin(), admin, "Admin should be set correctly");
         assertEq(gasStation.relayer(), relayer, "Relayer should be set correctly");
         assertEq(
-            address(gasStation.signerRegistry()), address(mockSignerRegistry), "SignerRegistry should be set correctly"
+            address(gasStation.signerRegistry()), address(signerRegistry), "SignerRegistry should be set correctly"
         );
 
         // Check GasStation balance
@@ -212,7 +216,7 @@ contract GasStationTest is Test {
 
         // Prank as admin and block signer1 in MockSignerRegistry
         vm.prank(admin);
-        mockSignerRegistry.blockSigner(signer1);
+        signerRegistry.blockSigner(signer1);
 
         // Prank as signer1 and attempt to withdraw
         vm.prank(signer1);
@@ -286,7 +290,7 @@ contract GasStationTest is Test {
     /// @notice Test that providing gas more than the balance reverts
     function testProvideGas_AmountMoreThanBalance_Revert() public {
         uint256 amount = 0.01 ether; // GasStation has 1 ether
-        GasStation newGasStation = new GasStation(address(mockSignerRegistry), admin, relayer);
+        GasStation newGasStation = new GasStation(address(signerRegistry), admin, relayer);
 
         vm.prank(relayer);
         vm.expectRevert("Insufficient gas station balance");

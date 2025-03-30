@@ -7,6 +7,8 @@ import "forge-std/Test.sol";
 // Import the ContractRegistry and MockSignerRegistry contracts
 import "../contracts/ContractRegistry.sol";
 import "../contracts/SignerRegistry.sol";
+import "../contracts/ContractRegistryProxy.sol";
+import "../contracts/SignerRegistryProxy.sol";
 
 /// @title ContractRegistryTest
 /// @notice Test suite for the ContractRegistry contract.
@@ -26,10 +28,16 @@ contract ContractRegistryTest is Test {
     /// @notice Runs before each test
     function setUp() public {
         // Deploy the mock SignerRegistry
-        signerRegistry = new SignerRegistry(admin);
+        SignerRegistry signerRegistryImpl = new SignerRegistry();
+        bytes memory initDataSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
+        SignerRegistryProxy signerRegistryProxy = new SignerRegistryProxy(address(signerRegistryImpl), initDataSignerRegistry);
+        signerRegistry = SignerRegistry(address(signerRegistryProxy));
 
         // Deploy the ContractRegistry with the mock SignerRegistry
-        contractRegistry = new ContractRegistry(address(signerRegistry));
+        ContractRegistry contractRegistryImpl = new ContractRegistry();
+        bytes memory initDataContractRegistry = abi.encodeWithSignature("initialize(address,address)", admin, address(signerRegistry));
+        ContractRegistryProxy contractRegistryProxy = new ContractRegistryProxy(address(contractRegistryImpl), initDataContractRegistry);
+        contractRegistry = ContractRegistry(address(contractRegistryProxy));
 
         // Label addresses for better readability in test outputs
         vm.label(admin, "Admin");
@@ -159,7 +167,8 @@ contract ContractRegistryTest is Test {
     /// @notice Test that the admin can change the signerRegistry address if needed
     function testChangeSignerRegistry() public {
         // Deploy a new MockSignerRegistry
-        SignerRegistry newSignerRegistry = new SignerRegistry(admin);
+        SignerRegistry newSignerRegistry = new SignerRegistry();
+        bytes memory initDataNewSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
 
         // Register signer1 in the new SignerRegistry
         vm.prank(admin);
