@@ -9,7 +9,6 @@ import "../contracts/ContractRegistry.sol";
 import "../contracts/SignerRegistry.sol";
 import "../contracts/Wallet.sol";
 import "../contracts/WalletFactory.sol";
-import "../contracts/SignatureHelper.sol";
 import "../contracts/GasStationFactory.sol";
 
 abstract contract Deployer is Script {
@@ -35,9 +34,6 @@ abstract contract Deployer is Script {
         );
         WalletFactoryProxy walletFactoryProxy = new WalletFactoryProxy(address(walletFactoryImpl), walletFactoryData);
         console.log("WalletFactory proxy deployed at:", address(walletFactoryProxy));
-
-        SignatureHelper signatureHelper = new SignatureHelper();
-        console.log("SignatureHelper deployed at:", address(signatureHelper));
 
         // Deploy GasStationFactory implementation
         GasStationFactory gasStationFactoryImpl = new GasStationFactory();
