@@ -100,7 +100,7 @@ contract GasStationTest is Test {
         uint256 amount = 0.005 ether;
 
         vm.prank(nonRelayer);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Relayer");
         gasStation.provideGas(amount);
     }
 
@@ -146,7 +146,7 @@ contract GasStationTest is Test {
         address newRelayer = address(0x9);
 
         vm.prank(nonAdmin);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Admin");
         gasStation.setRelayer(newRelayer);
     }
 
@@ -185,7 +185,7 @@ contract GasStationTest is Test {
         uint256 amount = 0.1 ether;
 
         vm.prank(nonSigner);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Signer");
         gasStation.withdraw(clientId, amount);
     }
 

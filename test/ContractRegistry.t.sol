@@ -63,7 +63,7 @@ contract ContractRegistryTest is Test {
 
         // Attempt to set allowed contract as signer2 (should fail)
         vm.prank(signer2);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Delegate");
         contractRegistry.setAllowedContract(clientId1, anotherContract, true);
     }
 
@@ -120,7 +120,7 @@ contract ContractRegistryTest is Test {
 
         // Attempt to set allowed contract as a random address (should fail)
         vm.prank(address(0xBEEF));
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Delegate");
         contractRegistry.setAllowedContract(clientId1, someContract, true);
     }
 
@@ -167,8 +167,10 @@ contract ContractRegistryTest is Test {
     /// @notice Test that the admin can change the signerRegistry address if needed
     function testChangeSignerRegistry() public {
         // Deploy a new MockSignerRegistry
-        SignerRegistry newSignerRegistry = new SignerRegistry();
+        SignerRegistry newSignerRegistryIpml = new SignerRegistry();
         bytes memory initDataNewSignerRegistry = abi.encodeWithSignature("initialize(address)", admin);
+        SignerRegistryProxy newSignerRegistryProxy = new SignerRegistryProxy(address(newSignerRegistryIpml), initDataNewSignerRegistry);
+        SignerRegistry newSignerRegistry = SignerRegistry(address(newSignerRegistryProxy));
 
         // Register signer1 in the new SignerRegistry
         vm.prank(admin);

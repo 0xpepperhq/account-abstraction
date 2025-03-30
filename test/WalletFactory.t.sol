@@ -147,7 +147,7 @@ contract WalletFactoryTest is Test {
         bytes32 clientId = clientId1;
 
         vm.prank(nonAdmin);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Admin");
         walletFactory.createWallet(userId, clientId);
     }
 
@@ -196,7 +196,7 @@ contract WalletFactoryTest is Test {
         address newAdmin = address(0x9);
 
         vm.prank(nonAdmin);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Admin");
         walletFactory.setAdmin(newAdmin);
     }
 
@@ -228,7 +228,7 @@ contract WalletFactoryTest is Test {
         address newRelayer = address(0xA);
 
         vm.prank(nonAdmin);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Admin");
         walletFactory.setRelayer(newRelayer);
     }
 
@@ -264,7 +264,7 @@ contract WalletFactoryTest is Test {
         address newContractRegistry = address(0xB);
 
         vm.prank(nonAdmin);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Admin");
         walletFactory.setContractRegistry(newContractRegistry);
     }
 

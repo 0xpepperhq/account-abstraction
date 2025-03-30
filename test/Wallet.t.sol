@@ -224,7 +224,7 @@ contract WalletTest is Test {
 
         // Prank as non-relayer and attempt to call executeAction
         vm.prank(nonSigner);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Relayer");
         wallet.executeAction{value: 0}(to, value, callData, _nonce, gasParams, signature);
     }
 
@@ -424,7 +424,7 @@ contract WalletTest is Test {
     function testWithdraw_AsNonSigner_Revert() public {
         // Prank as non-signer and attempt to call withdraw
         vm.prank(nonSigner);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Signer");
         wallet.withdraw(address(0), 1 ether, payable(address(this)));
     }
 
@@ -453,7 +453,7 @@ contract WalletTest is Test {
 
         // Prank as non-signer and attempt to call withdraw
         vm.prank(nonSigner);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Signer");
         wallet.withdraw(address(token), 500 * 1e18, payable(address(this)));
     }
 
@@ -479,7 +479,7 @@ contract WalletTest is Test {
 
         // Prank as non-signer and attempt to call setRelayer
         vm.prank(nonSigner);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Signer");
         wallet.setRelayer(newRelayer);
     }
 

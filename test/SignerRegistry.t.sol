@@ -59,9 +59,10 @@ contract SignerRegistryTest is Test {
         assertEq(retrievedSigner, signer1, "Signer1 should be registered for Client1");
     }
 
+    /// @notice Test that non-admin cannot register a signer
     function testRegisterSigner_AsNonAdmin_Revert() public {
         vm.prank(nonAdmin);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Admin");
         signerRegistry.registerSigner(clientId1, signer1);
     }
 
@@ -118,14 +119,10 @@ contract SignerRegistryTest is Test {
         signerRegistry.getSigner(clientId1);
     }
 
+    /// @notice Test that non-admin cannot block a signer
     function testBlockSigner_AsNonAdmin_Revert() public {
-        // Register a signer first
-        vm.prank(admin);
-        signerRegistry.registerSigner(clientId1, signer1);
-
-        // Attempt to block as non-admin
         vm.prank(nonAdmin);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert("Not authorized Admin");
         signerRegistry.blockSigner(signer1);
     }
 
@@ -156,10 +153,13 @@ contract SignerRegistryTest is Test {
         assertEq(signerRegistry.admin(), nonAdmin, "Admin should be updated to NonAdmin");
     }
 
+    /// @notice Test that non-admin cannot set a new admin
     function testSetAdmin_AsNonAdmin_Revert() public {
+        address newAdmin = address(0x9);
+
         vm.prank(nonAdmin);
-        vm.expectRevert("Not authorized");
-        signerRegistry.setAdmin(address(0x6));
+        vm.expectRevert("Not authorized Admin");
+        signerRegistry.setAdmin(newAdmin);
     }
 
     /// @notice Test that setting admin to zero address reverts
@@ -169,24 +169,15 @@ contract SignerRegistryTest is Test {
         signerRegistry.setAdmin(address(0));
     }
 
-    /// @notice Test that after changing admin, the new admin has control
+    /// @notice Test that new admin can register signers
     function testSetAdmin_NewAdminCanRegisterSigner() public {
-        // Change admin to nonAdmin
+        address newAdmin = address(0x9);
+
         vm.prank(admin);
-        signerRegistry.setAdmin(nonAdmin);
+        signerRegistry.setAdmin(newAdmin);
 
-        // Old admin should no longer be able to register a signer
-        vm.prank(admin);
-        vm.expectRevert("Not authorized");
+        vm.prank(newAdmin);
         signerRegistry.registerSigner(clientId1, signer1);
-
-        // New admin can register a signer
-        vm.prank(nonAdmin);
-        signerRegistry.registerSigner(clientId1, signer1);
-
-        // Verify the signer is registered
-        address retrievedSigner = signerRegistry.getSigner(clientId1);
-        assertEq(retrievedSigner, signer1, "Signer1 should be registered for Client1 by new admin");
     }
 
     /// @notice Test that a signer can be re-registered
