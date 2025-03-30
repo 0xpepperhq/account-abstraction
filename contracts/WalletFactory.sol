@@ -37,12 +37,10 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
         _disableInitializers();
     }
 
-    function initialize(
-        address _admin,
-        address _relayer,
-        address _contractRegistry,
-        address _signerRegistry
-    ) public initializer {
+    function initialize(address _admin, address _relayer, address _contractRegistry, address _signerRegistry)
+        public
+        initializer
+    {
         require(_admin != address(0), "Invalid admin address");
         require(_relayer != address(0), "Invalid relayer address");
         require(_contractRegistry != address(0), "Invalid contract registry address");
@@ -69,13 +67,13 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
         if (walletAddress == address(0)) {
             // Generate a stable salt from userId and clientId - same across all chains
             bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
-            
+
             // Get the wallet creation code
             bytes memory walletBytecode = getUserWalletCreationCode(clientId);
-            
+
             // Use CREATE3 library to deploy the wallet
             walletAddress = CREATE3.deploy(salt, walletBytecode, 0);
-            
+
             // Map the userId to the wallet address
             wallets[clientId][userId] = walletAddress;
 
@@ -96,10 +94,8 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
     /// @param clientId The client ID for the UserWallet
     /// @return The initialization bytecode of the UserWallet
     function getUserWalletCreationCode(bytes32 clientId) internal view returns (bytes memory) {
-        return abi.encodePacked(
-            type(Wallet).creationCode,
-            abi.encode(clientId, relayer, contractRegistry, signerRegistry)
-        );
+        return
+            abi.encodePacked(type(Wallet).creationCode, abi.encode(clientId, relayer, contractRegistry, signerRegistry));
     }
 
     /// @notice Allows the admin to change the admin address

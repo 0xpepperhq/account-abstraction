@@ -7,6 +7,7 @@ import "forge-std/Test.sol";
 // Import the WalletFactory, Wallet, and SignerRegistry contracts
 import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
 import {WalletFactory} from "../contracts/WalletFactory.sol";
+import {WalletFactoryProxy} from "../contracts/WalletFactoryProxy.sol";
 import {Wallet} from "../contracts/Wallet.sol";
 import {SignerRegistry} from "../contracts/SignerRegistry.sol";
 import {ContractRegistry} from "../contracts/ContractRegistry.sol";
@@ -56,12 +57,11 @@ contract WalletFactoryTest is Test {
         vm.stopPrank();
 
         // Deploy the WalletFactory contract with mock SignerRegistry, admin, relayer, ContractRegistry, and Wallet implementation
-        walletFactory = new WalletFactory(
-            admin,
-            relayer,
-            address(contractRegistry),
-            address(signerRegistry)
-        );
+        WalletFactory walletFactoryImpl = new WalletFactory();
+        WalletFactoryProxy proxy = new WalletFactoryProxy(address(walletFactoryImpl), abi.encodeWithSignature(
+            "initialize(address,address,address,address)", admin, relayer, address(contractRegistry), address(signerRegistry)
+        ));
+        walletFactory = WalletFactory(address(proxy));
 
         // Fund the WalletFactory with some ETH if needed
         vm.deal(address(walletFactory), 10 ether);
@@ -74,7 +74,9 @@ contract WalletFactoryTest is Test {
     function testDeployment() public view {
         assertEq(walletFactory.admin(), admin, "Admin should be set correctly");
         assertEq(walletFactory.relayer(), relayer, "Relayer should be set correctly");
-        assertEq(walletFactory.contractRegistry(), address(contractRegistry), "ContractRegistry should be set correctly");
+        assertEq(
+            walletFactory.contractRegistry(), address(contractRegistry), "ContractRegistry should be set correctly"
+        );
         assertEq(walletFactory.signerRegistry(), address(signerRegistry), "SignerRegistry should be set correctly");
 
         // Check WalletFactory balance
@@ -90,7 +92,9 @@ contract WalletFactoryTest is Test {
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
 
         // Compute expected wallet address
-        bytes memory bytecode = abi.encodePacked(type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry)));
+        bytes memory bytecode = abi.encodePacked(
+            type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry))
+        );
         bytes32 codeHash = keccak256(bytecode);
         address expectedWalletAddress = Create2.computeAddress(salt, codeHash, address(walletFactory));
 
@@ -116,8 +120,16 @@ contract WalletFactoryTest is Test {
         Wallet deployedWallet = Wallet(payable(walletAddress));
         assertEq(deployedWallet.clientId(), clientId, "ClientId should be set correctly in Wallet");
         assertEq(deployedWallet.relayer(), relayer, "Relayer should be set correctly in Wallet");
-        assertEq(address(deployedWallet.contractRegistry()), address(contractRegistry), "ContractRegistry should be set correctly in Wallet");
-        assertEq(address(deployedWallet.signerRegistry()), address(signerRegistry), "SignerRegistry should be set correctly in Wallet");
+        assertEq(
+            address(deployedWallet.contractRegistry()),
+            address(contractRegistry),
+            "ContractRegistry should be set correctly in Wallet"
+        );
+        assertEq(
+            address(deployedWallet.signerRegistry()),
+            address(signerRegistry),
+            "SignerRegistry should be set correctly in Wallet"
+        );
     }
 
     /// @notice Test that non-admin cannot create a wallet
@@ -139,7 +151,9 @@ contract WalletFactoryTest is Test {
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
 
         // Compute expected wallet address
-        bytes memory bytecode = abi.encodePacked(type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry)));
+        bytes memory bytecode = abi.encodePacked(
+            type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry))
+        );
         bytes32 codeHash = keccak256(bytecode);
         address expectedWalletAddress = Create2.computeAddress(salt, codeHash, address(walletFactory));
 
@@ -147,7 +161,9 @@ contract WalletFactoryTest is Test {
         address computedAddress = walletFactory.computeWalletAddress(userId, clientId);
 
         // Verify that the computed address matches expected
-        assertEq(computedAddress, expectedWalletAddress, "Computed wallet address should match expected CREATE2 address");
+        assertEq(
+            computedAddress, expectedWalletAddress, "Computed wallet address should match expected CREATE2 address"
+        );
 
         // Prank as admin and create the wallet
         vm.expectEmit(true, true, false, true);
@@ -239,7 +255,11 @@ contract WalletFactoryTest is Test {
         walletFactory.setContractRegistry(newContractRegistry);
 
         // Verify ContractRegistry is updated
-        assertEq(walletFactory.contractRegistry(), newContractRegistry, "ContractRegistry should be updated to newContractRegistry");
+        assertEq(
+            walletFactory.contractRegistry(),
+            newContractRegistry,
+            "ContractRegistry should be updated to newContractRegistry"
+        );
     }
 
     /// @notice Test that non-admin cannot set a new ContractRegistry
@@ -298,7 +318,9 @@ contract WalletFactoryTest is Test {
 
         // Compute expected salt and wallet address
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
-        bytes memory bytecode = abi.encodePacked(type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry)));
+        bytes memory bytecode = abi.encodePacked(
+            type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry))
+        );
         bytes32 codeHash = keccak256(bytecode);
         address expectedWalletAddress = Create2.computeAddress(salt, codeHash, address(walletFactory));
 
@@ -349,7 +371,9 @@ contract WalletFactoryTest is Test {
 
         // Compute expected salt and wallet address
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
-        bytes memory bytecode = abi.encodePacked(type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry)));
+        bytes memory bytecode = abi.encodePacked(
+            type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry))
+        );
         bytes32 codeHash = keccak256(bytecode);
         address expectedWalletAddress = Create2.computeAddress(salt, codeHash, address(walletFactory));
 
@@ -404,7 +428,9 @@ contract WalletFactoryTest is Test {
         // Prank as admin and attempt to create wallet
         // Assuming Wallet does not require ETH in constructor, this should pass
         vm.expectEmit(true, true, false, true);
-        bytes memory bytecode = abi.encodePacked(type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry)));
+        bytes memory bytecode = abi.encodePacked(
+            type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry))
+        );
         bytes32 codeHash = keccak256(bytecode);
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
         address expectedWalletAddress = Create2.computeAddress(salt, codeHash, address(walletFactory));
@@ -443,7 +469,15 @@ contract WalletFactoryTest is Test {
         // Verify that both wallets have the same signer (signer1)
         Wallet deployedWalletA = Wallet(payable(walletA));
         Wallet deployedWalletB = Wallet(payable(walletB));
-        assertEq(address(deployedWalletA.signerRegistry()), address(signerRegistry), "SignerRegistry should be set correctly in WalletA");
-        assertEq(address(deployedWalletB.signerRegistry()), address(signerRegistry), "SignerRegistry should be set correctly in WalletB");
+        assertEq(
+            address(deployedWalletA.signerRegistry()),
+            address(signerRegistry),
+            "SignerRegistry should be set correctly in WalletA"
+        );
+        assertEq(
+            address(deployedWalletB.signerRegistry()),
+            address(signerRegistry),
+            "SignerRegistry should be set correctly in WalletB"
+        );
     }
 }

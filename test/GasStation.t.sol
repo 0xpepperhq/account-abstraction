@@ -61,7 +61,9 @@ contract GasStationTest is Test {
     function testDeployment() public {
         assertEq(gasStation.admin(), admin, "Admin should be set correctly");
         assertEq(gasStation.relayer(), relayer, "Relayer should be set correctly");
-        assertEq(address(gasStation.signerRegistry()), address(mockSignerRegistry), "SignerRegistry should be set correctly");
+        assertEq(
+            address(gasStation.signerRegistry()), address(mockSignerRegistry), "SignerRegistry should be set correctly"
+        );
 
         // Check GasStation balance
         assertEq(address(gasStation).balance, 1 ether, "GasStation should have 1 ether");

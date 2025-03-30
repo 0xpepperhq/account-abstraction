@@ -28,7 +28,11 @@ contract ContractRegistry is ReentrancyGuard {
     /// @notice Allows the admin to set allowed contracts
     /// @param _contract The contract address to allow or disallow
     /// @param _allowed Boolean indicating whether the contract is allowed
-    function setAllowedContract(bytes32 _clientId, address _contract, bool _allowed) external onlySignerDelegate(_clientId) nonReentrant {
+    function setAllowedContract(bytes32 _clientId, address _contract, bool _allowed)
+        external
+        onlySignerDelegate(_clientId)
+        nonReentrant
+    {
         clientAllowedContracts[_clientId][_contract] = _allowed;
         emit ContractAllowed(_contract, _allowed);
     }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import "./Wallet.sol";
 
 contract SignatureHelper {
-      /// @notice Helper function to generate EIP-712 signature
+    /// @notice Helper function to generate EIP-712 signature
     function generateDigestForExecuteAction(
         address to,
         uint256 value,
@@ -28,19 +28,9 @@ contract SignatureHelper {
             )
         );
 
-        bytes32 structHash = keccak256(
-            abi.encode(
-                wallet.EXECUTE_ACTION_TYPEHASH(),
-                to,
-                value,
-                keccak256(data),
-                _nonce,
-                gasStructHash
-            )
-        );
+        bytes32 structHash =
+            keccak256(abi.encode(wallet.EXECUTE_ACTION_TYPEHASH(), to, value, keccak256(data), _nonce, gasStructHash));
 
-        digest = keccak256(
-            abi.encodePacked("\x19\x01", wallet.DOMAIN_SEPARATOR(), structHash)
-        );
+        digest = keccak256(abi.encodePacked("\x19\x01", wallet.DOMAIN_SEPARATOR(), structHash));
     }
 }

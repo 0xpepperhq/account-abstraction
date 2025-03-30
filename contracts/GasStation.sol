@@ -49,7 +49,7 @@ contract GasStation {
         require(address(this).balance >= amount, "Insufficient gas station balance");
 
         // Transfer ETH to the relayer
-        (bool success, ) = relayer.call{value: amount}("");
+        (bool success,) = relayer.call{value: amount}("");
         require(success, "Gas transfer failed");
 
         emit GasProvided(relayer, amount);
@@ -67,11 +67,11 @@ contract GasStation {
     /// @param amount The amount of ETH to withdraw
     function withdraw(bytes32 _clientId, uint256 amount) external onlySigner(_clientId) {
         address signer = signerRegistry.getSigner(_clientId);
-    
+
         require(signer != address(0), "Invalid signer address");
         require(amount <= address(this).balance, "Insufficient balance");
-    
-        (bool success, ) = payable(signer).call{value: amount}("");
+
+        (bool success,) = payable(signer).call{value: amount}("");
         require(success, "Withdrawal failed");
     }
 

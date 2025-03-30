@@ -33,11 +33,7 @@ contract GasStationFactory is Initializable, UUPSUpgradeable {
         _disableInitializers();
     }
 
-    function initialize(
-        address _admin,
-        address _relayer,
-        address _signerRegistry
-    ) public initializer {
+    function initialize(address _admin, address _relayer, address _signerRegistry) public initializer {
         require(_admin != address(0), "Invalid admin address");
         require(_relayer != address(0), "Invalid relayer address");
         require(_signerRegistry != address(0), "Invalid signer registry address");
@@ -70,10 +66,8 @@ contract GasStationFactory is Initializable, UUPSUpgradeable {
     /// @return gasStationAddress The address of the created GasStation contract
     function createGasStation(bytes32 clientId) external onlySigner(clientId) returns (address gasStationAddress) {
         bytes32 salt = keccak256(abi.encodePacked(clientId));
-        bytes memory bytecode = abi.encodePacked(
-            type(GasStation).creationCode,
-            abi.encode(signerRegistry, admin, relayer)
-        );
+        bytes memory bytecode =
+            abi.encodePacked(type(GasStation).creationCode, abi.encode(signerRegistry, admin, relayer));
 
         gasStationAddress = CREATE3.deploy(salt, bytecode, 0);
         emit GasStationCreated(clientId, gasStationAddress);

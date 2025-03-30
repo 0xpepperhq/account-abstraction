@@ -84,14 +84,8 @@ contract WalletTest is Test {
         vm.deal(address(wallet), 10 ether);
 
         // Initialize DOMAIN_SEPARATOR
-        DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                wallet.DOMAIN_TYPEHASH(),
-                keccak256(bytes(name)),
-                block.chainid,
-                address(wallet)
-            )
-        );
+        DOMAIN_SEPARATOR =
+            keccak256(abi.encode(wallet.DOMAIN_TYPEHASH(), keccak256(bytes(name)), block.chainid, address(wallet)));
     }
 
     /// @notice Helper function to generate EIP-712 signature
@@ -115,20 +109,10 @@ contract WalletTest is Test {
             )
         );
 
-        bytes32 structHash = keccak256(
-            abi.encode(
-                wallet.EXECUTE_ACTION_TYPEHASH(),
-                to,
-                value,
-                keccak256(data),
-                _nonce,
-                gasStructHash
-            )
-        );
+        bytes32 structHash =
+            keccak256(abi.encode(wallet.EXECUTE_ACTION_TYPEHASH(), to, value, keccak256(data), _nonce, gasStructHash));
 
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", wallet.DOMAIN_SEPARATOR(), structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", wallet.DOMAIN_SEPARATOR(), structHash));
 
         // Sign the digest using the signer's private key
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, digest);
@@ -139,7 +123,9 @@ contract WalletTest is Test {
     function testInitialization() public {
         assertEq(wallet.clientId(), clientId, "ClientId should be set correctly");
         assertEq(wallet.relayer(), relayer, "Relayer should be set correctly");
-        assertEq(address(wallet.contractRegistry()), address(contractRegistry), "ContractRegistry should be set correctly");
+        assertEq(
+            address(wallet.contractRegistry()), address(contractRegistry), "ContractRegistry should be set correctly"
+        );
         assertEq(address(wallet.signerRegistry()), address(signerRegistry), "SignerRegistry should be set correctly");
         assertEq(wallet.nonce(), 0, "Initial nonce should be zero");
         assertEq(wallet.DOMAIN_SEPARATOR(), DOMAIN_SEPARATOR, "Domain separator should be initialized correctly");
@@ -149,7 +135,7 @@ contract WalletTest is Test {
     function testReceiveEther() public {
         vm.deal(address(this), 1 ether);
         vm.prank(address(this));
-        (bool sent, ) = address(wallet).call{value: 1 ether}("");
+        (bool sent,) = address(wallet).call{value: 1 ether}("");
         require(sent, "Failed to send Ether");
 
         assertEq(address(wallet).balance, 11 ether, "Wallet should have received 1 ether");
@@ -160,7 +146,7 @@ contract WalletTest is Test {
         bytes memory data = hex"1234";
         vm.deal(address(this), 1 ether);
         vm.prank(address(this));
-        (bool sent, ) = address(wallet).call{value: 1 ether}(data);
+        (bool sent,) = address(wallet).call{value: 1 ether}(data);
         require(sent, "Failed to send Ether via fallback");
 
         assertEq(address(wallet).balance, 11 ether, "Wallet should have received 1 ether via fallback");
@@ -666,14 +652,8 @@ contract WalletTest is Test {
     /// @notice Test that Wallet's domain separator is correct
     function testDomainSeparator() public {
         // Use the known name "Wallet" as it's hard-coded in the contract
-        bytes32 expectedDomainSeparator = keccak256(
-            abi.encode(
-                wallet.DOMAIN_TYPEHASH(),
-                keccak256(bytes("Wallet")),
-                block.chainid,
-                address(wallet)
-            )
-        );
+        bytes32 expectedDomainSeparator =
+            keccak256(abi.encode(wallet.DOMAIN_TYPEHASH(), keccak256(bytes("Wallet")), block.chainid, address(wallet)));
 
         assertEq(wallet.DOMAIN_SEPARATOR(), expectedDomainSeparator, "Domain separator should be correct");
     }
@@ -867,11 +847,7 @@ contract MockERC20 is IERC20 {
         return true;
     }
 
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) external override returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) external override returns (bool) {
         require(balanceOf[from] >= amount, "Insufficient balance");
         require(allowance[from][msg.sender] >= amount, "Allowance exceeded");
 
@@ -917,11 +893,7 @@ contract MaliciousERC20 is IERC20 {
         return true;
     }
 
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) external override returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) external override returns (bool) {
         revert("TransferFrom failed");
     }
 }

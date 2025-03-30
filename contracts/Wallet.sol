@@ -24,9 +24,8 @@ contract Wallet is ReentrancyGuard {
     uint256 public nonce;
 
     // EIP-712 Domain Separator and TypeHashes
-    bytes32 public constant DOMAIN_TYPEHASH = keccak256(
-        "EIP712Domain(string name,uint256 chainId,address verifyingContract)"
-    );
+    bytes32 public constant DOMAIN_TYPEHASH =
+        keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
     bytes32 public constant REIMBURSE_GAS_TYPEHASH = keccak256(
         "ReimburseGas(uint256 gasPrice,uint256 gasLimit,bool reimburse,bool reimburseInNative,uint256 tokenRate,address token)"
     );
@@ -64,12 +63,7 @@ contract Wallet is ReentrancyGuard {
     /// @param _relayer The relayer address
     /// @param _contractRegistry The address of the ContractRegistry
     /// @param _signerRegistry The address of the SignerRegistry
-    constructor(
-        bytes32 _clientId,
-        address _relayer,
-        address _contractRegistry,
-        address _signerRegistry
-    ) {
+    constructor(bytes32 _clientId, address _relayer, address _contractRegistry, address _signerRegistry) {
         signerRegistry = ISignerRegistry(_signerRegistry);
         address signer = signerRegistry.getSigner(_clientId);
 
@@ -82,14 +76,8 @@ contract Wallet is ReentrancyGuard {
         contractRegistry = IContractRegistry(_contractRegistry);
 
         // Initialize EIP-712 Domain Separator
-        DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                DOMAIN_TYPEHASH,
-                keccak256(bytes("Wallet")),
-                block.chainid,
-                address(this)
-            )
-        );
+        DOMAIN_SEPARATOR =
+            keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes("Wallet")), block.chainid, address(this)));
     }
 
     // Accept Ether deposits
@@ -133,10 +121,7 @@ contract Wallet is ReentrancyGuard {
 
         // Verify the user's signature
         bytes32 messageHash = getMessageHash(to, value, data, _nonce, gasParams);
-        require(
-            verifySignature(signer, messageHash, signature),
-            "Invalid signature"
-        );
+        require(verifySignature(signer, messageHash, signature), "Invalid signature");
 
         // Execute the action
         (bool success, bytes memory returnData) = to.call{value: value}(data);
@@ -159,14 +144,16 @@ contract Wallet is ReentrancyGuard {
         if (gasParams.reimburse) {
             if (gasParams.reimburseInNative) {
                 require(address(this).balance >= gasCost, "Insufficient balance for gas reimbursement");
-                (bool reimbursementSuccess, ) = payable(relayer).call{value: gasCost}("");
+                (bool reimbursementSuccess,) = payable(relayer).call{value: gasCost}("");
                 require(reimbursementSuccess, "Gas reimbursement failed");
             } else {
                 require(gasParams.token != address(0), "Invalid token address");
                 // tokenRate is tokens per wei, scaled by 1e18
                 IERC20 token = IERC20(gasParams.token);
                 uint256 tokenAmount = (gasCost * gasParams.tokenRate) / 1e18;
-                require(token.balanceOf(address(this)) >= tokenAmount, "Insufficient token balance for gas reimbursement");
+                require(
+                    token.balanceOf(address(this)) >= tokenAmount, "Insufficient token balance for gas reimbursement"
+                );
                 token.safeTransfer(relayer, tokenAmount);
             }
         }
@@ -178,14 +165,10 @@ contract Wallet is ReentrancyGuard {
     /// @param token The token address (use address(0) for Ether)
     /// @param amount The amount to withdraw
     /// @param to The address to send the funds to
-    function withdraw(
-        address token,
-        uint256 amount,
-        address payable to
-    ) external nonReentrant onlySigner {
+    function withdraw(address token, uint256 amount, address payable to) external nonReentrant onlySigner {
         if (token == address(0)) {
             require(address(this).balance >= amount, "Insufficient balance");
-            (bool success, ) = to.call{value: amount}("");
+            (bool success,) = to.call{value: amount}("");
             require(success, "Ether transfer failed");
         } else {
             IERC20(token).safeTransfer(to, amount);
@@ -219,42 +202,27 @@ contract Wallet is ReentrancyGuard {
             )
         );
 
-        bytes32 structHash = keccak256(
-            abi.encode(
-                EXECUTE_ACTION_TYPEHASH,
-                to,
-                value,
-                keccak256(data),
-                _nonce,
-                gasStructHash
-            )
-        );
+        bytes32 structHash =
+            keccak256(abi.encode(EXECUTE_ACTION_TYPEHASH, to, value, keccak256(data), _nonce, gasStructHash));
 
-        return
-            keccak256(
-                abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash)
-            );
+        return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
     }
 
     /// @notice Verifies the signature using EIP-712
     /// @param signer The signer's address
     /// @param messageHash The hash to sign
     /// @param signature The signature
-    function verifySignature(
-        address signer,
-        bytes32 messageHash,
-        bytes calldata signature
-    ) public pure returns (bool) {
+    function verifySignature(address signer, bytes32 messageHash, bytes calldata signature)
+        public
+        pure
+        returns (bool)
+    {
         require(signature.length == 65, "Invalid signature length");
 
         (bytes32 r, bytes32 s, uint8 v) = splitSignature(signature);
 
         // Check if s-value is in the lower half order
-        require(
-            uint256(s) <=
-                0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff,
-            "Invalid s value"
-        );
+        require(uint256(s) <= 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff, "Invalid s value");
 
         // Check if v is 27 or 28
         require(v == 27 || v == 28, "Invalid v value");
@@ -265,15 +233,7 @@ contract Wallet is ReentrancyGuard {
 
     /// @notice Splits the signature into r, s, and v components
     /// @param sig The signature
-    function splitSignature(bytes calldata sig)
-        public
-        pure
-        returns (
-            bytes32 r,
-            bytes32 s,
-            uint8 v
-        )
-    {
+    function splitSignature(bytes calldata sig) public pure returns (bytes32 r, bytes32 s, uint8 v) {
         require(sig.length == 65, "Invalid signature length");
 
         assembly {

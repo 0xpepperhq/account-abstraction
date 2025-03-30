@@ -2,6 +2,8 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Script.sol";
+import "../contracts/WalletFactoryProxy.sol";
+import "../contracts/GasStationFactoryProxy.sol";
 
 import "../contracts/ContractRegistry.sol";
 import "../contracts/SignerRegistry.sol";
@@ -10,38 +12,51 @@ import "../contracts/WalletFactory.sol";
 import "../contracts/SignatureHelper.sol";
 import "../contracts/GasStationFactory.sol";
 
-contract Deployer is Script {
+abstract contract Deployer is Script {
+    address admin;
+    address relayer;
+    address signerRegistry;
+    address contractRegistry;
+
+    function updateParams() internal virtual;
+
     function run() external {
+        updateParams();
+
         vm.startBroadcast();
 
-        address admin = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
-        address relayer = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
+        // Deploy WalletFactory implementation
+        WalletFactory walletFactoryImpl = new WalletFactory();
+        console.log("WalletFactory implementation deployed at:", address(walletFactoryImpl));
 
-        // Deploy SignerRegistry
-        SignerRegistry signerRegistry = new SignerRegistry(admin);
-        console.log("SignerRegistry deployed at:", address(signerRegistry));
-
-        // Deploy ContractRegistry
-        ContractRegistry contractRegistry = new ContractRegistry(address(signerRegistry));
-        console.log("ContractRegistry deployed at:", address(contractRegistry));
-
-        // Deploy WalletFactory
-        WalletFactory walletFactory = new WalletFactory(
-            admin,
-            relayer,
-            address(contractRegistry),
-            address(signerRegistry)
+        // Deploy WalletFactory proxy
+        bytes memory walletFactoryData = abi.encodeWithSelector(
+            WalletFactory.initialize.selector, admin, relayer, address(contractRegistry), address(signerRegistry)
         );
-        console.log("WalletFactory deployed at:", address(walletFactory));
+        WalletFactoryProxy walletFactoryProxy = new WalletFactoryProxy(address(walletFactoryImpl), walletFactoryData);
+        console.log("WalletFactory proxy deployed at:", address(walletFactoryProxy));
 
         SignatureHelper signatureHelper = new SignatureHelper();
         console.log("SignatureHelper deployed at:", address(signatureHelper));
 
-        GasStationFactory gasStationFactory = new GasStationFactory(
-            admin,
-            relayer,
-            address(signerRegistry)
-        );
-        console.log("GasStationFactory deployed at:", address(gasStationFactory));
+        // Deploy GasStationFactory implementation
+        GasStationFactory gasStationFactoryImpl = new GasStationFactory();
+        console.log("GasStationFactory implementation deployed at:", address(gasStationFactoryImpl));
+
+        // Deploy GasStationFactory proxy
+        bytes memory gasStationFactoryData =
+            abi.encodeWithSelector(GasStationFactory.initialize.selector, admin, relayer, address(signerRegistry));
+        GasStationFactoryProxy gasStationFactoryProxy =
+            new GasStationFactoryProxy(address(gasStationFactoryImpl), gasStationFactoryData);
+        console.log("GasStationFactory proxy deployed at:", address(gasStationFactoryProxy));
+    }
+}
+
+contract DeployerTest is Deployer {
+    function updateParams() internal override {
+        admin = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
+        relayer = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
+        signerRegistry = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
+        contractRegistry = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
     }
 }

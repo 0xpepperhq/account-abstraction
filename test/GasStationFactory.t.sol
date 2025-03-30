@@ -4,8 +4,9 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 import {GasStation} from "../contracts/GasStation.sol";
 import {GasStationFactory} from "../contracts/GasStationFactory.sol";
+import {GasStationFactoryProxy} from "../contracts/GasStationFactoryProxy.sol";
 import {SignerRegistry} from "../contracts/SignerRegistry.sol";
-import "@openzeppelin/contracts/utils/Create2.sol";
+
 
 /**
  * @title GasStationFactoryTest
@@ -31,7 +32,12 @@ contract GasStationFactoryTest is Test {
 
         // Deploy GasStationFactory with admin, relayer, and signerRegistry
         vm.startPrank(admin);
-        gasStationFactory = new GasStationFactory(admin, relayer, address(signerRegistry));
+        GasStationFactory gasStationFactoryImpl = new GasStationFactory();
+        bytes memory initData = abi.encodeWithSignature(
+            "initialize(address,address,address)", admin, relayer, address(signerRegistry)
+        );
+        GasStationFactoryProxy proxy = new GasStationFactoryProxy(address(gasStationFactoryImpl), initData);
+        gasStationFactory = GasStationFactory(address(proxy));
 
         // Set signers for client IDs
         signerRegistry.registerSigner(clientId1, signer1);
@@ -45,7 +51,9 @@ contract GasStationFactoryTest is Test {
     function testConstructorInitialization() public {
         assertEq(gasStationFactory.admin(), admin, "Admin address mismatch");
         assertEq(gasStationFactory.relayer(), relayer, "Relayer address mismatch");
-        assertEq(address(gasStationFactory.signerRegistry()), address(signerRegistry), "SignerRegistry address mismatch");
+        assertEq(
+            address(gasStationFactory.signerRegistry()), address(signerRegistry), "SignerRegistry address mismatch"
+        );
     }
 
     /**
@@ -89,12 +97,16 @@ contract GasStationFactoryTest is Test {
         // Signer1 creates GasStation for clientId1
         vm.prank(signer1);
         address gasStationAddress1 = gasStationFactory.createGasStation(clientId1);
-        assertTrue(gasStationFactory.gasStations(clientId1) == gasStationAddress1, "GasStation not registered correctly");
+        assertTrue(
+            gasStationFactory.gasStations(clientId1) == gasStationAddress1, "GasStation not registered correctly"
+        );
 
         // Signer2 creates GasStation for clientId2
         vm.prank(signer2);
         address gasStationAddress2 = gasStationFactory.createGasStation(clientId2);
-        assertTrue(gasStationFactory.gasStations(clientId2) == gasStationAddress2, "GasStation not registered correctly");
+        assertTrue(
+            gasStationFactory.gasStations(clientId2) == gasStationAddress2, "GasStation not registered correctly"
+        );
 
         // Attempt to create GasStation from unauthorized signer
         vm.prank(relayer);
