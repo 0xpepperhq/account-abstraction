@@ -29,7 +29,7 @@ abstract contract Deployer is Script {
         console.log("SignerRegistry implementation deployed at:", address(signerRegistryImpl));
 
         // Deploy SignerRegistry proxy
-        bytes memory signerRegistryData = abi.encodeWithSelector(SignerRegistry.initialize.selector);
+        bytes memory signerRegistryData = abi.encodeWithSelector(SignerRegistry.initialize.selector, admin);
         SignerRegistryProxy signerRegistryProxy =
             new SignerRegistryProxy(address(signerRegistryImpl), signerRegistryData);
         console.log("SignerRegistry proxy deployed at:", address(signerRegistryProxy));
