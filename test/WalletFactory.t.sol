@@ -58,9 +58,16 @@ contract WalletFactoryTest is Test {
 
         // Deploy the WalletFactory contract with mock SignerRegistry, admin, relayer, ContractRegistry, and Wallet implementation
         WalletFactory walletFactoryImpl = new WalletFactory();
-        WalletFactoryProxy proxy = new WalletFactoryProxy(address(walletFactoryImpl), abi.encodeWithSignature(
-            "initialize(address,address,address,address)", admin, relayer, address(contractRegistry), address(signerRegistry)
-        ));
+        WalletFactoryProxy proxy = new WalletFactoryProxy(
+            address(walletFactoryImpl),
+            abi.encodeWithSignature(
+                "initialize(address,address,address,address)",
+                admin,
+                relayer,
+                address(contractRegistry),
+                address(signerRegistry)
+            )
+        );
         walletFactory = WalletFactory(address(proxy));
 
         // Fund the WalletFactory with some ETH if needed

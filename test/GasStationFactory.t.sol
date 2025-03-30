@@ -7,7 +7,6 @@ import {GasStationFactory} from "../contracts/GasStationFactory.sol";
 import {GasStationFactoryProxy} from "../contracts/GasStationFactoryProxy.sol";
 import {SignerRegistry} from "../contracts/SignerRegistry.sol";
 
-
 /**
  * @title GasStationFactoryTest
  * @dev Unit tests for the GasStationFactory contract.
@@ -33,9 +32,8 @@ contract GasStationFactoryTest is Test {
         // Deploy GasStationFactory with admin, relayer, and signerRegistry
         vm.startPrank(admin);
         GasStationFactory gasStationFactoryImpl = new GasStationFactory();
-        bytes memory initData = abi.encodeWithSignature(
-            "initialize(address,address,address)", admin, relayer, address(signerRegistry)
-        );
+        bytes memory initData =
+            abi.encodeWithSignature("initialize(address,address,address)", admin, relayer, address(signerRegistry));
         GasStationFactoryProxy proxy = new GasStationFactoryProxy(address(gasStationFactoryImpl), initData);
         gasStationFactory = GasStationFactory(address(proxy));
 
