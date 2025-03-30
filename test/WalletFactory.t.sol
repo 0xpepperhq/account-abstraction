@@ -5,7 +5,7 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 
 // Import the WalletFactory, Wallet, and SignerRegistry contracts
-import {Create2} from "@openzeppelin/contracts/utils/Create2.sol";
+import {CREATE3} from "../contracts/utils/CREATE3.sol";
 import {WalletFactory} from "../contracts/WalletFactory.sol";
 import {WalletFactoryProxy} from "../contracts/WalletFactoryProxy.sol";
 import {Wallet} from "../contracts/Wallet.sol";
@@ -91,14 +91,8 @@ contract WalletFactoryTest is Test {
         // Compute expected salt
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
 
-        // Compute expected wallet address
-        bytes memory bytecode = abi.encodePacked(
-            type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry))
-        );
-        bytes32 codeHash = keccak256(bytecode);
-        address expectedWalletAddress = Create2.computeAddress(salt, codeHash, address(walletFactory));
-
         // Expect WalletCreated event
+        address expectedWalletAddress = walletFactory.computeWalletAddress(userId, clientId);
         vm.expectEmit(true, true, false, true);
         emit WalletFactory.WalletCreated(userId, clientId, expectedWalletAddress);
 
@@ -107,7 +101,7 @@ contract WalletFactoryTest is Test {
         address walletAddress = walletFactory.createWallet(userId, clientId);
 
         // Verify the returned wallet address matches expected
-        assertEq(walletAddress, expectedWalletAddress, "Wallet address should match expected CREATE2 address");
+        assertEq(walletAddress, expectedWalletAddress, "Wallet address should match expected CREATE3 address");
 
         // Verify that the wallet is deployed correctly
         assertTrue(walletAddress.code.length > 0, "Wallet should be deployed");
@@ -150,32 +144,20 @@ contract WalletFactoryTest is Test {
         // Compute expected salt
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
 
-        // Compute expected wallet address
-        bytes memory bytecode = abi.encodePacked(
-            type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry))
-        );
-        bytes32 codeHash = keccak256(bytecode);
-        address expectedWalletAddress = Create2.computeAddress(salt, codeHash, address(walletFactory));
-
         // Call computeWalletAddress
         address computedAddress = walletFactory.computeWalletAddress(userId, clientId);
 
-        // Verify that the computed address matches expected
-        assertEq(
-            computedAddress, expectedWalletAddress, "Computed wallet address should match expected CREATE2 address"
-        );
-
         // Prank as admin and create the wallet
         vm.expectEmit(true, true, false, true);
-        emit WalletFactory.WalletCreated(userId, clientId, expectedWalletAddress);
+        emit WalletFactory.WalletCreated(userId, clientId, computedAddress);
         vm.prank(admin);
         address deployedWalletAddress = walletFactory.createWallet(userId, clientId);
 
         // Verify that the deployed wallet address matches the computed address
-        assertEq(deployedWalletAddress, expectedWalletAddress, "Deployed wallet address should match computed address");
+        assertEq(deployedWalletAddress, computedAddress, "Deployed wallet address should match computed address");
 
         // Verify the wallet is deployed correctly
-        assertTrue(expectedWalletAddress.code.length > 0, "Wallet should be deployed");
+        assertTrue(computedAddress.code.length > 0, "Wallet should be deployed");
     }
 
     /// @notice Test that only admin can set a new admin
@@ -307,7 +289,7 @@ contract WalletFactoryTest is Test {
         bytes32 clientId = keccak256("UnknownClient");
 
         vm.prank(admin);
-        vm.expectRevert("Signer not found");
+        vm.expectRevert("INITIALIZATION_FAILED");
         walletFactory.createWallet(userId, clientId);
     }
 
@@ -318,11 +300,7 @@ contract WalletFactoryTest is Test {
 
         // Compute expected salt and wallet address
         bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
-        bytes memory bytecode = abi.encodePacked(
-            type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry))
-        );
-        bytes32 codeHash = keccak256(bytecode);
-        address expectedWalletAddress = Create2.computeAddress(salt, codeHash, address(walletFactory));
+        address expectedWalletAddress = walletFactory.computeWalletAddress(userId, clientId);
 
         // Expect WalletCreated event
         vm.expectEmit(true, true, false, true);
@@ -364,41 +342,14 @@ contract WalletFactoryTest is Test {
         assertEq(deployedWalletB.clientId(), clientId2, "ClientId should be set correctly in WalletB");
     }
 
-    /// @notice Test that computeWalletAddress matches the deployed wallet address
-    function testComputeWalletAddress_MatchesDeployedAddress() public {
-        bytes32 userId = userId1;
-        bytes32 clientId = clientId1;
-
-        // Compute expected salt and wallet address
-        bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
-        bytes memory bytecode = abi.encodePacked(
-            type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry))
-        );
-        bytes32 codeHash = keccak256(bytecode);
-        address expectedWalletAddress = Create2.computeAddress(salt, codeHash, address(walletFactory));
-
-        // Prank as admin and create the wallet
-        vm.expectEmit(true, true, false, true);
-        emit WalletFactory.WalletCreated(userId, clientId, expectedWalletAddress);
-        vm.prank(admin);
-        address deployedWalletAddress = walletFactory.createWallet(userId, clientId);
-
-        // Compute via factory's computeWalletAddress
-        address computedAddress = walletFactory.computeWalletAddress(userId, clientId);
-
-        // Verify that computed address matches deployed address
-        assertEq(computedAddress, deployedWalletAddress, "Computed address should match deployed address");
-    }
-
     /// @notice Test that creating a wallet with zero signer address reverts
     function testCreateWallet_ZeroSignerAddress_Revert() public {
         bytes32 userId = userId1;
         bytes32 clientId = keccak256("Client3"); // Assume Client3 is not registered
 
         // Prank as admin and attempt to create wallet with zero signer
-        // Since Client3 is not registered, getSigner would return zero and revert
         vm.prank(admin);
-        vm.expectRevert("Signer not found");
+        vm.expectRevert("INITIALIZATION_FAILED");
         walletFactory.createWallet(userId, clientId);
     }
 
@@ -413,7 +364,7 @@ contract WalletFactoryTest is Test {
 
         // Prank as admin and attempt to create wallet
         vm.prank(admin);
-        vm.expectRevert("Signer is blocked");
+        vm.expectRevert("INITIALIZATION_FAILED");
         walletFactory.createWallet(userId, clientId);
     }
 
@@ -428,12 +379,7 @@ contract WalletFactoryTest is Test {
         // Prank as admin and attempt to create wallet
         // Assuming Wallet does not require ETH in constructor, this should pass
         vm.expectEmit(true, true, false, true);
-        bytes memory bytecode = abi.encodePacked(
-            type(Wallet).creationCode, abi.encode(clientId, relayer, address(contractRegistry), address(signerRegistry))
-        );
-        bytes32 codeHash = keccak256(bytecode);
-        bytes32 salt = keccak256(abi.encodePacked(userId, clientId));
-        address expectedWalletAddress = Create2.computeAddress(salt, codeHash, address(walletFactory));
+        address expectedWalletAddress = walletFactory.computeWalletAddress(userId, clientId);
         emit WalletFactory.WalletCreated(userId, clientId, expectedWalletAddress);
         vm.prank(admin);
         address walletAddress = walletFactory.createWallet(userId, clientId);
