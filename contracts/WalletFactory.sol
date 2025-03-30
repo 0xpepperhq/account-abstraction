@@ -46,6 +46,10 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
         require(_admin != address(0), "Invalid admin address");
         require(_relayer != address(0), "Invalid relayer address");
         require(_contractRegistry != address(0), "Invalid contract registry address");
+        require(_signerRegistry != address(0), "Invalid signer registry address");
+
+        __UUPSUpgradeable_init();
+
         admin = _admin;
         relayer = _relayer;
         contractRegistry = _contractRegistry;
@@ -129,4 +133,7 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
     function getWallet(bytes32 clientId, bytes32 userId) external view returns (address) {
         return wallets[clientId][userId];
     }
+
+    /// @notice Required override for UUPS upgradeable pattern
+    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {}
 }

@@ -40,6 +40,10 @@ contract GasStationFactory is Initializable, UUPSUpgradeable {
     ) public initializer {
         require(_admin != address(0), "Invalid admin address");
         require(_relayer != address(0), "Invalid relayer address");
+        require(_signerRegistry != address(0), "Invalid signer registry address");
+
+        __UUPSUpgradeable_init();
+
         admin = _admin;
         relayer = _relayer;
         signerRegistry = _signerRegistry;
@@ -83,4 +87,7 @@ contract GasStationFactory is Initializable, UUPSUpgradeable {
         bytes32 salt = keccak256(abi.encodePacked(clientId));
         return CREATE3.getDeployed(salt);
     }
+
+    /// @notice Required override for UUPS upgradeable pattern
+    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {}
 }
