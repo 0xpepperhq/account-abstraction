@@ -3,9 +3,11 @@ pragma solidity ^0.8.17;
 
 import {GasStation} from "./GasStation.sol";
 import {ISignerRegistry} from "./interfaces/ISignerRegistry.sol";
-import "@openzeppelin/contracts/utils/Create2.sol";
+import {CREATE3} from "./utils/CREATE3.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract GasStationFactory {
+contract GasStationFactory is Initializable, UUPSUpgradeable {
     address public admin;
     address public relayer;
     address public signerRegistry;
@@ -26,11 +28,16 @@ contract GasStationFactory {
         _;
     }
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    function initialize(
         address _admin,
         address _relayer,
         address _signerRegistry
-    ) {
+    ) public initializer {
         require(_admin != address(0), "Invalid admin address");
         require(_relayer != address(0), "Invalid relayer address");
         admin = _admin;
@@ -64,7 +71,7 @@ contract GasStationFactory {
             abi.encode(signerRegistry, admin, relayer)
         );
 
-        gasStationAddress = Create2.deploy(0, salt, bytecode);
+        gasStationAddress = CREATE3.deploy(salt, bytecode, 0);
         emit GasStationCreated(clientId, gasStationAddress);
         gasStations[clientId] = gasStationAddress;
     }
@@ -74,11 +81,6 @@ contract GasStationFactory {
     /// @return gasStationAddress The address of the GasStation contract
     function computeAddress(bytes32 clientId) external view returns (address) {
         bytes32 salt = keccak256(abi.encodePacked(clientId));
-        bytes memory bytecode = abi.encodePacked(
-            type(GasStation).creationCode,
-            abi.encode(signerRegistry, admin, relayer)
-        );
-
-        return Create2.computeAddress(salt, keccak256(bytecode));
+        return CREATE3.getDeployed(salt);
     }
 }
