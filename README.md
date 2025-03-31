@@ -5,6 +5,7 @@ A robust and upgradeable Account Abstraction system that enables smart contract 
 ## Overview
 
 This project implements an Account Abstraction system that allows for:
+
 - Creation and management of smart contract wallets
 - Gas abstraction through dedicated gas stations
 - Signature verification and validation
@@ -46,17 +47,20 @@ This project implements an Account Abstraction system that allows for:
 ## Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/yourusername/account-abstraction.git
 cd account-abstraction
 ```
 
-2. Install dependencies:
+1. Install dependencies:
+
 ```bash
 forge install
 ```
 
-3. Build the project:
+1. Build the project:
+
 ```bash
 forge build
 ```
@@ -114,11 +118,13 @@ proxy.upgradeTo(address(newImpl));
 ## Testing
 
 Run the test suite:
+
 ```bash
 forge test
 ```
 
 Run tests with verbosity:
+
 ```bash
 forge test -vv
 ```
@@ -126,11 +132,13 @@ forge test -vv
 ## Deployment
 
 1. Deploy core registries:
+
 ```bash
 forge script script/Deployer.s.sol:DeployerTest --rpc-url <RPC_URL> --broadcast
 ```
 
-2. Verify contracts:
+1. Verify contracts:
+
 ```bash
 forge verify-contract <ADDRESS> <CONTRACT_NAME> --chain-id <CHAIN_ID>
 ```

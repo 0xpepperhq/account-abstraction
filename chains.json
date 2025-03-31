@@ -1,0 +1,240 @@
+{
+  "deployer": "pepper-deployer",
+  "gas": {
+    "limit": 5000000,
+    "price": "auto"
+  },
+  "verification": {
+    "enabled": true
+  },
+  "constructor": {
+    "admin": "0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722",
+    "relayer": "0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722"
+  },
+  "chains": [
+    {
+      "id": 1,
+      "name": "ethereum",
+      "rpc": "https://ethereum.publicnode.com",
+      "explorer": "https://api.etherscan.io",
+      "api_key": "YourEtherscanAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 56,
+      "name": "bnb",
+      "rpc": "https://bsc-dataseed.binance.org",
+      "explorer": "https://api.bscscan.com",
+      "api_key": "YourBscAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 42161,
+      "name": "arbitrum",
+      "rpc": "https://arb1.arbitrum.io/rpc",
+      "explorer": "https://api.arbiscan.io",
+      "api_key": "YourArbitrumAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 137,
+      "name": "polygon",
+      "rpc": "https://polygon-rpc.com",
+      "explorer": "https://api.polygonscan.com",
+      "api_key": "YourPolygonAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 10,
+      "name": "optimism",
+      "rpc": "https://mainnet.optimism.io",
+      "explorer": "https://api-optimistic.etherscan.io",
+      "api_key": "YourOptimismAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 43114,
+      "name": "avalanche",
+      "rpc": "https://api.avax.network/ext/bc/C/rpc",
+      "explorer": "https://api.snowtrace.io",
+      "api_key": "YourAvalancheAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 8453,
+      "name": "base",
+      "rpc": "https://mainnet.base.org",
+      "explorer": "https://api.basescan.org",
+      "api_key": "YourBaseAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 324,
+      "name": "zksync",
+      "rpc": "https://mainnet.era.zksync.io",
+      "explorer": "https://api.zksync.io/api",
+      "api_key": "YourZkSyncAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 59144,
+      "name": "linea",
+      "rpc": "https://rpc.linea.build",
+      "explorer": "https://api.lineascan.build/api",
+      "api_key": "YourLineaAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 250,
+      "name": "fantom",
+      "rpc": "https://rpc.ftm.tools",
+      "explorer": "https://api.ftmscan.com",
+      "api_key": "YourFantomAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 25,
+      "name": "cronos",
+      "rpc": "https://evm.cronos.org",
+      "explorer": "https://api.cronoscan.com",
+      "api_key": "YourCronosAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 5000,
+      "name": "mantle",
+      "rpc": "https://rpc.mantle.xyz",
+      "explorer": "https://explorer.mantle.xyz/api",
+      "api_key": "YourMantleAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 81457,
+      "name": "blast",
+      "rpc": "https://rpc.blast.io",
+      "explorer": "https://api.blastscan.io",
+      "api_key": "YourBlastAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 204,
+      "name": "opbnb",
+      "rpc": "https://opbnb-mainnet-rpc.bnbchain.org",
+      "explorer": "https://opbnb-mainnet.nodereal.io/api",
+      "api_key": "YourOpBnbAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 1088,
+      "name": "metis",
+      "rpc": "https://andromeda.metis.io/?owner=1088",
+      "explorer": "https://api.andromeda-explorer.metis.io/api",
+      "api_key": "YourMetisAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 42220,
+      "name": "celo",
+      "rpc": "https://forno.celo.org",
+      "explorer": "https://api.celoscan.io",
+      "api_key": "YourCeloAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 100,
+      "name": "gnosis",
+      "rpc": "https://rpc.gnosischain.com",
+      "explorer": "https://api.gnosisscan.io",
+      "api_key": "YourGnosisAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 2222,
+      "name": "kava",
+      "rpc": "https://evm.kava.io",
+      "explorer": "https://explorer.kava.io/api",
+      "api_key": "YourKavaAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 22776,
+      "name": "manta",
+      "rpc": "https://pacific-rpc.manta.network",
+      "explorer": "https://apiscan.manta.network/api",
+      "api_key": "YourMantaAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 1116,
+      "name": "core",
+      "rpc": "https://rpc.coredao.org",
+      "explorer": "https://api.scan.coredao.org",
+      "api_key": "YourCoreAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 80094,
+      "name": "berachain",
+      "rpc": "https://rpc.berachain.com",
+      "explorer": "https://api.berachain.com",
+      "api_key": "YourBerachainAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 84532,
+      "name": "baseGoerli",
+      "rpc": "https://sepolia.base.org",
+      "explorer": "https://goerli.basescan.org",
+      "api_key": "YourBaseGoerliAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 146,
+      "name": "sonic",
+      "rpc": "https://rpc.sonic.org",
+      "explorer": "https://api.sonic.org",
+      "api_key": "YourSonicAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 1329,
+      "name": "sei",
+      "rpc": "https://rpc.sei.org",
+      "explorer": "https://api.seiscan.io",
+      "api_key": "YourSeiAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 200901,
+      "name": "bitlayer",
+      "rpc": "https://rpc.bitlayer.network",
+      "explorer": "https://api.bitlayer.network",
+      "api_key": "YourBitlayerAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 4202,
+      "name": "liskSepolia",
+      "rpc": "https://rpc.sepolia-api.lisk.com",
+      "explorer": "https://sepolia-blockscout.lisk.com/api",
+      "api_key": "YourLiskSepoliaAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 1135,
+      "name": "lisk",
+      "rpc": "https://rpc.lisk.io",
+      "explorer": "https://explorer.lisk.io/api",
+      "api_key": "YourLiskAPIKey123",
+      "enabled": true
+    },
+    {
+      "id": 48900,
+      "name": "zircuit",
+      "rpc": "https://rpc.zircuit.io",
+      "explorer": "https://api.zircuit.io",
+      "api_key": "YourZircuitAPIKey123",
+      "enabled": true
+    }
+  ]
+}

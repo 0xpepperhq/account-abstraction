@@ -13,14 +13,10 @@ import "../contracts/GasStationFactory.sol";
 import "../contracts/ContractRegistryProxy.sol";
 import "../contracts/SignerRegistryProxy.sol";
 
-abstract contract Deployer is Script {
-    address admin;
-    address relayer;
-
-    function updateParams() internal virtual;
-
+contract Deployer is Script {
     function run() external {
-        updateParams();
+        address admin = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
+        address relayer = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
 
         vm.startBroadcast();
 
@@ -70,12 +66,5 @@ abstract contract Deployer is Script {
         GasStationFactoryProxy gasStationFactoryProxy =
             new GasStationFactoryProxy(address(gasStationFactoryImpl), gasStationFactoryData);
         console.log("GasStationFactory proxy deployed at:", address(gasStationFactoryProxy));
-    }
-}
-
-contract DeployerTest is Deployer {
-    function updateParams() internal override {
-        admin = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
-        relayer = 0x6F6623B00B0b2eAEFA47A4fDE06d6931F7121722;
     }
 }
