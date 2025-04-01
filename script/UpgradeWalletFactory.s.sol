@@ -30,7 +30,7 @@ abstract contract WalletFactoryUpgrader is Script {
 }
 
 // Contract for upgrading WalletFactory on Testnet
-contract UpgradeWalletFactoryTestnet is WalletFactoryUpgrader {
+contract UpgradeWalletFactory is WalletFactoryUpgrader {
     function updateParams() internal override {
         proxyAddress = 0x6aEEf85D78242eeaf8D0c71a730806dA26D7aCB1;
     }

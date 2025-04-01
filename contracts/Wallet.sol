@@ -120,7 +120,7 @@ contract Wallet is ReentrancyGuard {
         require(gasParams.gasLimit <= MAX_GAS_LIMIT, "Gas limit too high");
 
         // Verify the user's signature
-        bytes32 messageHash = getMessageHash(to, value, data, _nonce, gasParams);
+        bytes32 messageHash = getMessageHash(to, value, data, _nonce);
         require(verifySignature(signer, messageHash, signature), "Invalid signature");
 
         // Execute the action
@@ -182,28 +182,15 @@ contract Wallet is ReentrancyGuard {
     /// @param value The amount of Ether to send with the call
     /// @param data The calldata to execute
     /// @param _nonce The user's nonce
-    /// @param gasParams The gas reimbursement parameters
+    /// @return The message hash
     function getMessageHash(
         address to,
         uint256 value,
         bytes calldata data,
-        uint256 _nonce,
-        Types.ReimburseGas calldata gasParams
+        uint256 _nonce
     ) public view returns (bytes32) {
-        bytes32 gasStructHash = keccak256(
-            abi.encode(
-                REIMBURSE_GAS_TYPEHASH,
-                gasParams.gasPrice,
-                gasParams.gasLimit,
-                gasParams.reimburse,
-                gasParams.reimburseInNative,
-                gasParams.tokenRate,
-                gasParams.token
-            )
-        );
-
         bytes32 structHash =
-            keccak256(abi.encode(EXECUTE_ACTION_TYPEHASH, to, value, keccak256(data), _nonce, gasStructHash));
+            keccak256(abi.encode(EXECUTE_ACTION_TYPEHASH, to, value, keccak256(data), _nonce));
 
         return keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
     }

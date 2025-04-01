@@ -30,7 +30,7 @@ abstract contract GasStationFactoryUpgrader is Script {
 }
 
 // Contract for upgrading GasStationFactory on Testnet
-contract UpgradeGasStationFactoryTestnet is GasStationFactoryUpgrader {
+contract UpgradeGasStationFactory is GasStationFactoryUpgrader {
     function updateParams() internal override {
         proxyAddress = 0x692839ED4EDfc2FcFe93790C7F91ee8555d0e753;
     }
