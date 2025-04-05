@@ -134,7 +134,7 @@ forge test -vv
 1. Deploy core registries:
 
 ```bash
-forge script script/Deployer.s.sol:DeployerTest --rpc-url <RPC_URL> --broadcast
+forge script script/Deployer.s.sol:Deployer --rpc-url http://127.0.0.1:8545 --broadcast --account deployer
 ```
 
 1. Verify contracts:

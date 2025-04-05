@@ -101,28 +101,12 @@ contract WalletTest is Test {
     }
 
     /// @notice Helper function to generate EIP-712 signature
-    function _signExecuteAction(
-        address to,
-        uint256 value,
-        bytes memory data,
-        uint256 _nonce,
-        Types.ReimburseGas memory gasParams
-    ) internal returns (bytes memory) {
+    function _signExecuteAction(address to, uint256 value, bytes memory data, uint256 _nonce)
+        internal
+        returns (bytes memory)
+    {
         // Compute the message hash
-        bytes32 gasStructHash = keccak256(
-            abi.encode(
-                wallet.REIMBURSE_GAS_TYPEHASH(),
-                gasParams.gasPrice,
-                gasParams.gasLimit,
-                gasParams.reimburse,
-                gasParams.reimburseInNative,
-                gasParams.tokenRate,
-                gasParams.token
-            )
-        );
-
-        bytes32 structHash =
-            keccak256(abi.encode(wallet.EXECUTE_ACTION_TYPEHASH(), to, value, keccak256(data), _nonce, gasStructHash));
+        bytes32 structHash = keccak256(abi.encode(wallet.EXECUTE_ACTION_TYPEHASH(), to, value, keccak256(data), _nonce));
 
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", wallet.DOMAIN_SEPARATOR(), structHash));
 
@@ -183,7 +167,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Expect ActionExecuted event
         vm.expectEmit(true, true, false, true);
@@ -223,7 +207,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Prank as non-relayer and attempt to call executeAction
         vm.prank(nonSigner);
@@ -250,7 +234,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
@@ -277,7 +261,7 @@ contract WalletTest is Test {
         });
 
         // Generate invalid signature (e.g., tampered)
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
         // Tamper with the signature by flipping a byte
         signature[10] = ~signature[10];
 
@@ -306,7 +290,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
@@ -333,7 +317,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
@@ -360,7 +344,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
@@ -387,7 +371,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Record relayer balance before
         uint256 relayerBalanceBefore = relayer.balance;
@@ -539,7 +523,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Record relayer token balance before
         uint256 relayerBalanceBefore = token.balanceOf(relayer);
@@ -578,7 +562,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
@@ -615,7 +599,7 @@ contract WalletTest is Test {
         gasParams.gasLimit = 110000; // 110,000 * 100 gwei = 11 ether
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
@@ -642,7 +626,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Record relayer balance before
         uint256 relayerBalanceBefore = relayer.balance;
@@ -689,7 +673,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
@@ -720,7 +704,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Prank as relayer and attempt to call executeAction
         vm.prank(relayer);
@@ -745,7 +729,7 @@ contract WalletTest is Test {
             token: address(0)
         });
 
-        bytes memory signature1 = _signExecuteAction(to1, value1, callData1, _nonce1, gasParams1);
+        bytes memory signature1 = _signExecuteAction(to1, value1, callData1, _nonce1);
 
         // Expect ActionExecuted event
         vm.expectEmit(true, true, false, true);
@@ -770,7 +754,7 @@ contract WalletTest is Test {
             token: address(0)
         });
 
-        bytes memory signature2 = _signExecuteAction(to2, value2, callData2, _nonce2, gasParams2);
+        bytes memory signature2 = _signExecuteAction(to2, value2, callData2, _nonce2);
 
         // Expect ActionExecuted event
         vm.expectEmit(true, true, false, true);
@@ -806,7 +790,7 @@ contract WalletTest is Test {
         });
 
         // Generate signature
-        bytes memory signature = _signExecuteAction(to, value, callData, _nonce, gasParams);
+        bytes memory signature = _signExecuteAction(to, value, callData, _nonce);
 
         // Prank as relayer and call executeAction first time
         vm.prank(relayer);
