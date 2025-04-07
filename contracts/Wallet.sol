@@ -25,11 +25,8 @@ contract Wallet is ReentrancyGuard {
     // EIP-712 Domain Separator and TypeHashes
     bytes32 public constant DOMAIN_TYPEHASH =
         keccak256("EIP712Domain(string name,uint256 chainId,address verifyingContract)");
-    bytes32 public constant REIMBURSE_GAS_TYPEHASH = keccak256(
-        "ReimburseGas(uint256 gasPrice,uint256 gasLimit,bool reimburse,bool reimburseInNative,uint256 tokenRate,address token)"
-    );
     bytes32 public constant EXECUTE_ACTION_TYPEHASH = keccak256(
-        "ExecuteAction(address to,uint256 value,bytes data,uint256 nonce,ReimburseGas gas)ReimburseGas(uint256 gasPrice,uint256 gasLimit,bool reimburse,bool reimburseInNative,uint256 tokenRate,address token)"
+        "ExecuteAction(address to,uint256 value,bytes data,uint256 nonce)"
     );
     bytes32 public DOMAIN_SEPARATOR;
 
@@ -251,8 +248,15 @@ contract Wallet is ReentrancyGuard {
         bytes memory data
     ) public view returns (bytes32 digest) {
         // Compute the message hash
-        bytes32 structHash =
-            keccak256(abi.encode(EXECUTE_ACTION_TYPEHASH, to, value, keccak256(data), nonce));
+        bytes32 structHash = keccak256(
+            abi.encode(
+                EXECUTE_ACTION_TYPEHASH,
+                to,
+                value,
+                keccak256(data),
+                nonce
+            )
+        );
 
         digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
     }
