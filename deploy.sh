@@ -105,17 +105,17 @@ EOF
             echo -e "${YELLOW}Verifying contracts on ${explorer_url}${NC}"
             
             # Verify implementations (You may need to adjust the exact verification commands based on your contracts)
-            # echo "Verifying SignerRegistry implementation..." | tee -a "$log_file"
-            # forge verify-contract --chain-id $chain_id --watch --compiler-version v0.8.17+commit.8df45f5f --num-of-optimizations 200 --etherscan-api-key $api_key "$signerRegistryImpl" contracts/SignerRegistry.sol:SignerRegistry 2>&1 | tee -a "$log_file"
+            echo "Verifying SignerRegistry implementation..." | tee -a "$log_file"
+            forge verify-contract --chain-id $chain_id --watch --compiler-version v0.8.17+commit.8df45f5f --num-of-optimizations 200 --etherscan-api-key $api_key "$signerRegistryImpl" contracts/SignerRegistry.sol:SignerRegistry 2>&1 | tee -a "$log_file"
             
-            # echo "Verifying ContractRegistry implementation..." | tee -a "$log_file"
-            # forge verify-contract --chain-id $chain_id --watch --compiler-version v0.8.17+commit.8df45f5f --num-of-optimizations 200 --etherscan-api-key $api_key "$contractRegistryImpl" contracts/ContractRegistry.sol:ContractRegistry 2>&1 | tee -a "$log_file"
+            echo "Verifying ContractRegistry implementation..." | tee -a "$log_file"
+            forge verify-contract --chain-id $chain_id --watch --compiler-version v0.8.17+commit.8df45f5f --num-of-optimizations 200 --etherscan-api-key $api_key "$contractRegistryImpl" contracts/ContractRegistry.sol:ContractRegistry 2>&1 | tee -a "$log_file"
             
-            # echo "Verifying WalletFactory implementation..." | tee -a "$log_file"
-            # forge verify-contract --chain-id $chain_id --watch --compiler-version v0.8.17+commit.8df45f5f --num-of-optimizations 200 --etherscan-api-key $api_key "$walletFactoryImpl" contracts/WalletFactory.sol:WalletFactory 2>&1 | tee -a "$log_file"
+            echo "Verifying WalletFactory implementation..." | tee -a "$log_file"
+            forge verify-contract --chain-id $chain_id --watch --compiler-version v0.8.17+commit.8df45f5f --num-of-optimizations 200 --etherscan-api-key $api_key "$walletFactoryImpl" contracts/WalletFactory.sol:WalletFactory 2>&1 | tee -a "$log_file"
             
-            # echo "Verifying GasStationFactory implementation..." | tee -a "$log_file"
-            # forge verify-contract --chain-id $chain_id --watch --compiler-version v0.8.17+commit.8df45f5f --num-of-optimizations 200 --etherscan-api-key $api_key "$gasStationFactoryImpl" contracts/GasStationFactory.sol:GasStationFactory 2>&1 | tee -a "$log_file"
+            echo "Verifying GasStationFactory implementation..." | tee -a "$log_file"
+            forge verify-contract --chain-id $chain_id --watch --compiler-version v0.8.17+commit.8df45f5f --num-of-optimizations 200 --etherscan-api-key $api_key "$gasStationFactoryImpl" contracts/GasStationFactory.sol:GasStationFactory 2>&1 | tee -a "$log_file"
             
             # Verify proxies with constructor args
             echo "Verifying SignerRegistry proxy..." | tee -a "$log_file"
