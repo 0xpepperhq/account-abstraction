@@ -8,7 +8,6 @@ import "forge-std/Test.sol";
 import {Wallet} from "../contracts/Wallet.sol";
 import {ContractRegistry} from "../contracts/ContractRegistry.sol";
 import {SignerRegistry} from "../contracts/SignerRegistry.sol";
-import "../contracts/Types.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {SignerRegistryProxy} from "../contracts/SignerRegistryProxy.sol";
@@ -157,7 +156,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: true,
@@ -197,7 +196,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: true,
@@ -224,7 +223,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: true,
@@ -251,7 +250,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: true,
@@ -280,7 +279,7 @@ contract WalletTest is Test {
         uint256 _nonce = 1; // Incorrect nonce
 
         // Prepare gas reimbursement parameters
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: true,
@@ -307,7 +306,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters with gasPrice > MAX_GAS_PRICE (assumed to be 200 gwei)
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 300 gwei, // Too high
             gasLimit: 100000,
             reimburse: true,
@@ -334,7 +333,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters with gasLimit > MAX_GAS_LIMIT (assumed to be 500,000)
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 600000, // Too high
             reimburse: true,
@@ -361,7 +360,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: true,
@@ -513,7 +512,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: true,
@@ -552,7 +551,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: true,
@@ -579,7 +578,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters with reimbursement higher than Wallet balance
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: true,
@@ -616,7 +615,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters with reimburse = false
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: false,
@@ -663,7 +662,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters with invalid token address
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: true,
@@ -694,7 +693,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: true,
@@ -720,7 +719,7 @@ contract WalletTest is Test {
         bytes memory callData1 = abi.encodeWithSignature("foo()");
         uint256 _nonce1 = 0;
 
-        Types.ReimburseGas memory gasParams1 = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams1 = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: false,
@@ -745,7 +744,7 @@ contract WalletTest is Test {
         bytes memory callData2 = abi.encodeWithSignature("bar()");
         uint256 _nonce2 = 1;
 
-        Types.ReimburseGas memory gasParams2 = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams2 = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: false,
@@ -780,7 +779,7 @@ contract WalletTest is Test {
         uint256 _nonce = 0;
 
         // Prepare gas reimbursement parameters
-        Types.ReimburseGas memory gasParams = Types.ReimburseGas({
+        Wallet.ReimburseGas memory gasParams = Wallet.ReimburseGas({
             gasPrice: 100 gwei,
             gasLimit: 100000,
             reimburse: false,

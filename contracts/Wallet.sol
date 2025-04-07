@@ -6,7 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./interfaces/ISignerRegistry.sol";
 import "./interfaces/IContractRegistry.sol";
-import "./Types.sol"; // Import the Types library
 
 contract Wallet is ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -33,6 +32,15 @@ contract Wallet is ReentrancyGuard {
         "ExecuteAction(address to,uint256 value,bytes data,uint256 nonce,ReimburseGas gas)ReimburseGas(uint256 gasPrice,uint256 gasLimit,bool reimburse,bool reimburseInNative,uint256 tokenRate,address token)"
     );
     bytes32 public DOMAIN_SEPARATOR;
+
+    struct ReimburseGas {
+        uint256 gasPrice;
+        uint256 gasLimit;
+        bool reimburse;
+        bool reimburseInNative;
+        uint256 tokenRate; // Tokens per wei (scaled by 1e18)
+        address token;
+    }
 
     // Events
     event Deposited(address indexed token, uint256 amount);
@@ -102,7 +110,7 @@ contract Wallet is ReentrancyGuard {
         uint256 value,
         bytes calldata data,
         uint256 _nonce,
-        Types.ReimburseGas calldata gasParams, // Use Types.ReimburseGas
+        ReimburseGas calldata gasParams,
         bytes calldata signature
     ) external payable onlyRelayer onlyAllowedContract(to) nonReentrant {
         // Record the initial gas
@@ -234,5 +242,18 @@ contract Wallet is ReentrancyGuard {
         require(_newRelayer != address(0), "Invalid address");
         emit RelayerChanged(relayer, _newRelayer);
         relayer = _newRelayer;
+    }
+
+    /// @notice Helper function to generate EIP-712 signature
+    function generateDigestForExecuteAction(
+        address to,
+        uint256 value,
+        bytes memory data
+    ) public view returns (bytes32 digest) {
+        // Compute the message hash
+        bytes32 structHash =
+            keccak256(abi.encode(EXECUTE_ACTION_TYPEHASH, to, value, keccak256(data), nonce));
+
+        digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
     }
 }
