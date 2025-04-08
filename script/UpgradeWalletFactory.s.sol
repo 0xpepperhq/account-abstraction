@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Script.sol";
+import {Wallet} from "../contracts/Wallet.sol";
 import {WalletFactory} from "../contracts/WalletFactory.sol";
 
 abstract contract WalletFactoryUpgrader is Script {
@@ -25,6 +26,7 @@ abstract contract WalletFactoryUpgrader is Script {
         proxy.upgradeToAndCall(address(newImplementation), "");
         console.log("Proxy upgraded to new implementation at:", address(newImplementation));
 
+        proxy.updateWalletCreationCode(type(Wallet).creationCode);
         vm.stopBroadcast();
     }
 }
@@ -32,6 +34,6 @@ abstract contract WalletFactoryUpgrader is Script {
 // Contract for upgrading WalletFactory on Testnet
 contract UpgradeWalletFactory is WalletFactoryUpgrader {
     function updateParams() internal override {
-        proxyAddress = 0x6aEEf85D78242eeaf8D0c71a730806dA26D7aCB1;
+        proxyAddress = 0xBD461d59be4dd3990c7fB386150D9AB8E83D8107;
     }
 }

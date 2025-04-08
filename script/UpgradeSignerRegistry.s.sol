@@ -32,6 +32,6 @@ abstract contract SignerRegistryUpgrader is Script {
 // Contract for upgrading SignerRegistry on Testnet
 contract UpgradeSignerRegistry is SignerRegistryUpgrader {
     function updateParams() internal override {
-        proxyAddress = 0x9a41A02309565c648f0bDfAc8988E90400E351d1;
+        proxyAddress = 0x54C52177c2475f4Acbc29819Ab290adc2ee9E255;
     }
 }

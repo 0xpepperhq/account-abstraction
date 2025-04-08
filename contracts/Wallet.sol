@@ -4,10 +4,11 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "./interfaces/ISignerRegistry.sol";
 import "./interfaces/IContractRegistry.sol";
 
-contract Wallet is ReentrancyGuard {
+contract Wallet is ReentrancyGuard, IERC1155Receiver {
     using SafeERC20 for IERC20;
 
     bytes32 public clientId;
@@ -250,5 +251,46 @@ contract Wallet is ReentrancyGuard {
         bytes32 structHash = keccak256(abi.encode(EXECUTE_ACTION_TYPEHASH, to, value, keccak256(data), nonce));
 
         digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
+    }
+
+    /// @notice Handles the receipt of a single ERC1155 token type
+    /// @param operator The address which initiated the transfer
+    /// @param from The address which previously owned the token
+    /// @param id The ID of the token being transferred
+    /// @param value The amount of tokens being transferred
+    /// @param data Additional data with no specified format
+    /// @return bytes4 `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
+    function onERC1155Received(
+        address operator,
+        address from,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        return IERC1155Receiver.onERC1155Received.selector;
+    }
+
+    /// @notice Handles the receipt of a multiple ERC1155 token types
+    /// @param operator The address which initiated the transfer
+    /// @param from The address which previously owned the token
+    /// @param ids An array containing ids of each token being transferred
+    /// @param values An array containing amounts of each token being transferred
+    /// @param data Additional data with no specified format
+    /// @return bytes4 `bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"))`
+    function onERC1155BatchReceived(
+        address operator,
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external override returns (bytes4) {
+        return IERC1155Receiver.onERC1155BatchReceived.selector;
+    }
+
+    /// @notice Query if a contract implements an interface
+    /// @param interfaceId The interface identifier, as specified in ERC-165
+    /// @return True if the contract implements the interface defined by interfaceId
+    function supportsInterface(bytes4 interfaceId) external pure override returns (bool) {
+        return interfaceId == type(IERC1155Receiver).interfaceId;
     }
 }

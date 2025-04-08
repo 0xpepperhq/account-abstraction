@@ -12,6 +12,7 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
     address public relayer;
     address public contractRegistry;
     address public signerRegistry;
+    bytes public walletInitCode;
 
     // Mapping from off-chain client ids and user IDs to wallet addresses
     mapping(bytes32 => mapping(bytes32 => address)) public wallets;
@@ -52,6 +53,7 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
         relayer = _relayer;
         contractRegistry = _contractRegistry;
         signerRegistry = _signerRegistry;
+        walletInitCode = type(Wallet).creationCode;
     }
 
     /// @notice Creates a new Wallet using CREATE3 pattern and maps it to the off-chain user ID
@@ -95,7 +97,14 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
     /// @return The initialization bytecode of the UserWallet
     function getUserWalletCreationCode(bytes32 clientId) internal view returns (bytes memory) {
         return
-            abi.encodePacked(type(Wallet).creationCode, abi.encode(clientId, relayer, contractRegistry, signerRegistry));
+            abi.encodePacked(walletInitCode, abi.encode(clientId, relayer, contractRegistry, signerRegistry));
+    }
+
+    /// @notice Allows the admin to update the wallet initialization code
+    /// @param _walletInitCode The new wallet initialization code
+    /// @dev This function is only callable by the admin
+    function updateWalletCreationCode(bytes memory _walletInitCode) external onlyAdmin {
+        walletInitCode = _walletInitCode;
     }
 
     /// @notice Allows the admin to change the admin address
