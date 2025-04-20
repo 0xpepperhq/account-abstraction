@@ -30,6 +30,9 @@ contract Wallet is ReentrancyGuard, IERC1155Receiver {
         keccak256("ExecuteAction(address to,uint256 value,bytes data,uint256 nonce)");
     bytes32 public DOMAIN_SEPARATOR;
 
+    string public constant NAME = "Wallet";
+    string public constant VERSION = "V1";
+    
     struct ReimburseGas {
         uint256 gasPrice;
         uint256 gasLimit;
@@ -82,7 +85,7 @@ contract Wallet is ReentrancyGuard, IERC1155Receiver {
 
         // Initialize EIP-712 Domain Separator
         DOMAIN_SEPARATOR =
-            keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes("Wallet")), block.chainid, address(this)));
+            keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(NAME)), block.chainid, address(this)));
     }
 
     // Accept Ether deposits
@@ -249,7 +252,6 @@ contract Wallet is ReentrancyGuard, IERC1155Receiver {
     {
         // Compute the message hash
         bytes32 structHash = keccak256(abi.encode(EXECUTE_ACTION_TYPEHASH, to, value, keccak256(data), nonce));
-
         digest = keccak256(abi.encodePacked("\x19\x01", DOMAIN_SEPARATOR, structHash));
     }
 
