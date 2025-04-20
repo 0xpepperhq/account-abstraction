@@ -96,8 +96,7 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
     /// @param clientId The client ID for the UserWallet
     /// @return The initialization bytecode of the UserWallet
     function getUserWalletCreationCode(bytes32 clientId) internal view returns (bytes memory) {
-        return
-            abi.encodePacked(walletInitCode, abi.encode(clientId, relayer, contractRegistry, signerRegistry));
+        return abi.encodePacked(walletInitCode, abi.encode(clientId, relayer, contractRegistry, signerRegistry));
     }
 
     /// @notice Allows the admin to update the wallet initialization code

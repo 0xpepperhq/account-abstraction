@@ -32,7 +32,7 @@ contract Wallet is ReentrancyGuard, IERC1155Receiver {
 
     string public constant NAME = "Wallet";
     string public constant VERSION = "V1";
-    
+
     struct ReimburseGas {
         uint256 gasPrice;
         uint256 gasLimit;
@@ -84,8 +84,7 @@ contract Wallet is ReentrancyGuard, IERC1155Receiver {
         contractRegistry = IContractRegistry(_contractRegistry);
 
         // Initialize EIP-712 Domain Separator
-        DOMAIN_SEPARATOR =
-            keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(NAME)), block.chainid, address(this)));
+        DOMAIN_SEPARATOR = keccak256(abi.encode(DOMAIN_TYPEHASH, keccak256(bytes(NAME)), block.chainid, address(this)));
     }
 
     // Accept Ether deposits
@@ -262,13 +261,11 @@ contract Wallet is ReentrancyGuard, IERC1155Receiver {
     /// @param value The amount of tokens being transferred
     /// @param data Additional data with no specified format
     /// @return bytes4 `bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"))`
-    function onERC1155Received(
-        address operator,
-        address from,
-        uint256 id,
-        uint256 value,
-        bytes calldata data
-    ) external override returns (bytes4) {
+    function onERC1155Received(address operator, address from, uint256 id, uint256 value, bytes calldata data)
+        external
+        override
+        returns (bytes4)
+    {
         return IERC1155Receiver.onERC1155Received.selector;
     }
 
