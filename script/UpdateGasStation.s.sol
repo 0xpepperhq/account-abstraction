@@ -30,6 +30,6 @@ abstract contract UpgradeGasStation is Script {
 
 contract UpdateGasStation is UpgradeGasStation {
     function updateParams() internal override {
-        proxyAddress = 0x3adaCA28f07Cd28Cb40e0e5442b0Eb0b0AB33710;
+        proxyAddress = 0x53BE9CC95ddD50ecFBc3d5c10A037Ea1FcC01186;
     }
 }
