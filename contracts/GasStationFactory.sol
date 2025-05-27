@@ -66,12 +66,7 @@ contract GasStationFactory is Initializable, UUPSUpgradeable {
         bytes32 salt = keccak256(abi.encodePacked(clientId));
 
         // BeaconProxy constructor args: (beacon, initData)
-        bytes memory initData = abi.encodeWithSelector(
-            GasStation.initialize.selector,
-            signerRegistry,
-            admin,
-            relayer
-        );
+        bytes memory initData = abi.encodeWithSelector(GasStation.initialize.selector, signerRegistry, admin, relayer);
         bytes memory beaconProxyCode =
             abi.encodePacked(type(BeaconProxy).creationCode, abi.encode(gasStationBeacon, initData));
 
