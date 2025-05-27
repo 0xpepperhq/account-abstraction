@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-import "./interfaces/ISignerRegistry.sol";
-import "./interfaces/IContractRegistry.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {IERC1155Receiver} from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import {ISignerRegistry} from "./interfaces/ISignerRegistry.sol";
+import {IContractRegistry} from "./interfaces/IContractRegistry.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract Wallet is ReentrancyGuard, IERC1155Receiver {
+contract Wallet is Initializable, ReentrancyGuardUpgradeable, IERC1155Receiver {
     using SafeERC20 for IERC20;
 
     bytes32 public clientId;
@@ -66,18 +67,22 @@ contract Wallet is ReentrancyGuard, IERC1155Receiver {
         _;
     }
 
-    /// @notice Constructor
+    /// @notice proxy initializer
     /// @param _clientId The client ID of the wallet
     /// @param _relayer The relayer address
     /// @param _contractRegistry The address of the ContractRegistry
     /// @param _signerRegistry The address of the SignerRegistry
-    constructor(bytes32 _clientId, address _relayer, address _contractRegistry, address _signerRegistry) {
+    function initialize(bytes32 _clientId, address _relayer, address _contractRegistry, address _signerRegistry)
+        external
+        initializer
+    {
+        __ReentrancyGuard_init();
+
         signerRegistry = ISignerRegistry(_signerRegistry);
         address signer = signerRegistry.getSigner(_clientId);
-
-        require(signer != address(0), "Invalid signer address");
-        require(_relayer != address(0), "Invalid relayer address");
-        require(_contractRegistry != address(0), "Invalid contract registry address");
+        require(signer != address(0), "Invalid signer");
+        require(_relayer != address(0), "Invalid relayer");
+        require(_contractRegistry != address(0), "Invalid registry");
 
         clientId = _clientId;
         relayer = _relayer;
