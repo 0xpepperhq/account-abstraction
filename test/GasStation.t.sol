@@ -56,7 +56,8 @@ contract GasStationTest is Test {
         signerRegistry.registerSigner(clientId2, signer2);
 
         // Deploy the GasStation contract with mock SignerRegistry, admin, relayer
-        gasStation = new GasStation(address(signerRegistry), admin, relayer);
+        gasStation = new GasStation();
+        gasStation.initialize(address(signerRegistry), admin, relayer);
 
         // Fund the GasStation with 1 ether
         vm.deal(address(gasStation), 1 ether);
@@ -291,7 +292,8 @@ contract GasStationTest is Test {
     /// @notice Test that providing gas more than the balance reverts
     function testProvideGas_AmountMoreThanBalance_Revert() public {
         uint256 amount = 0.01 ether; // GasStation has 1 ether
-        GasStation newGasStation = new GasStation(address(signerRegistry), admin, relayer);
+        GasStation newGasStation = new GasStation();
+        newGasStation.initialize(address(signerRegistry), admin, relayer);
 
         vm.prank(relayer);
         vm.expectRevert("Insufficient gas station balance");
