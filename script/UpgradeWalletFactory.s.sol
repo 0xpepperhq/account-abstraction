@@ -26,7 +26,6 @@ abstract contract WalletFactoryUpgrader is Script {
         proxy.upgradeToAndCall(address(newImplementation), "");
         console.log("Proxy upgraded to new implementation at:", address(newImplementation));
 
-        proxy.updateWalletCreationCode(type(Wallet).creationCode);
         vm.stopBroadcast();
     }
 }
