@@ -59,7 +59,7 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
         contractRegistry = _contractRegistry;
         signerRegistry = _signerRegistry;
 
-        UpgradeableBeacon walletBeacon = new UpgradeableBeacon(address(new Wallet()), _admin);
+        UpgradeableBeacon walletBeacon = new UpgradeableBeacon(address(new Wallet()), address(this));
 
         walletBeaconAddress = address(walletBeacon);
         walletInitCode = type(BeaconProxy).creationCode;
@@ -117,6 +117,7 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
     /// @notice Upgrade the Wallet logic for _all_ user wallets
     /// @param newImpl The new implementation address
     function upgradeWalletImplementation(address newImpl) external onlyAdmin {
+        require(newImpl != address(0), "Invalid implementation address");
         UpgradeableBeacon(walletBeaconAddress).upgradeTo(newImpl);
     }
 
