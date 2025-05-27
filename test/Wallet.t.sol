@@ -89,7 +89,8 @@ contract WalletTest is Test {
         vm.stopPrank();
 
         // Deploy Wallet
-        wallet = new Wallet(clientId, relayer, address(contractRegistry), address(signerRegistry));
+        wallet = new Wallet();
+        wallet.initialize(clientId, relayer, address(contractRegistry), address(signerRegistry));
 
         // Fund Wallet with ETH for reimbursements
         vm.deal(address(wallet), 10 ether);
