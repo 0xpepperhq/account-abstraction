@@ -30,6 +30,6 @@ abstract contract UpgradeWallet is Script {
 
 contract UpdateWallet is UpgradeWallet {
     function updateParams() internal override {
-        proxyAddress = 0xBD461d59be4dd3990c7fB386150D9AB8E83D8107;
+        proxyAddress = 0xDEcd7d5f3CFC7EF6c53B95946c8630A1cad8b407;
     }
 }
