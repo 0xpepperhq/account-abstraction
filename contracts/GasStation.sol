@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "./interfaces/ISignerRegistry.sol";
+import {ISignerRegistry} from "./interfaces/ISignerRegistry.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract GasStation {
+contract GasStation is Initializable {
     address public admin;
     address public relayer;
 
@@ -32,7 +33,7 @@ contract GasStation {
         _;
     }
 
-    constructor(address _signerRegistry, address _admin, address _relayer) {
+    function initialize(address _signerRegistry, address _admin, address _relayer) external initializer {
         require(_signerRegistry != address(0), "Invalid owner address");
         require(_admin != address(0), "Invalid admin address");
         require(_relayer != address(0), "Invalid relayer address");
