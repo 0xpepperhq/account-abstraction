@@ -2,21 +2,27 @@
 pragma solidity ^0.8.17;
 
 import {GasStation} from "./GasStation.sol";
-import {ISignerRegistry} from "./interfaces/ISignerRegistry.sol";
 import {CREATE3} from "./utils/CREATE3.sol";
+import {ISignerRegistry} from "./interfaces/ISignerRegistry.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
 contract GasStationFactory is Initializable, UUPSUpgradeable {
     address public admin;
     address public relayer;
     address public signerRegistry;
 
+    // Beacon holding the GasStation logic
+    address public gasStationBeacon;
+
+    // Mapping from clientId → deployed proxy
     mapping(bytes32 => address) public gasStations;
 
     event GasStationCreated(bytes32 indexed clientId, address gasStationAddress);
-    event AdminChanged(address indexed oldAdmin, address indexed newAdmin);
-    event RelayerChanged(address indexed oldRelayer, address indexed newRelayer);
+    event AdminChanged(address oldAdmin, address newAdmin);
+    event RelayerChanged(address oldRelayer, address newRelayer);
 
     modifier onlyAdmin() {
         require(msg.sender == admin, "Not authorized Admin");
@@ -33,55 +39,64 @@ contract GasStationFactory is Initializable, UUPSUpgradeable {
         _disableInitializers();
     }
 
-    function initialize(address _admin, address _relayer, address _signerRegistry) public initializer {
-        require(_admin != address(0), "Invalid admin address");
-        require(_relayer != address(0), "Invalid relayer address");
-        require(_signerRegistry != address(0), "Invalid signer registry address");
+    function initialize(address _admin, address _relayer, address _signerRegistry, address _initialGasStationImpl)
+        external
+        initializer
+    {
+        require(_admin != address(0), "Invalid admin");
+        require(_relayer != address(0), "Invalid relayer");
+        require(_signerRegistry != address(0), "Invalid registry");
+        require(_initialGasStationImpl != address(0), "Invalid impl");
 
         __UUPSUpgradeable_init();
 
         admin = _admin;
         relayer = _relayer;
         signerRegistry = _signerRegistry;
+
+        // Deploy beacon, admin controls upgrades
+        UpgradeableBeacon beacon = new UpgradeableBeacon(_initialGasStationImpl, _admin);
+
+        gasStationBeacon = address(beacon);
     }
 
-    /// @notice Allows the admin to change the admin address
-    /// @param _newAdmin The new admin address
-    function setAdmin(address _newAdmin) external onlyAdmin {
-        require(_newAdmin != address(0), "Invalid admin address");
-        emit AdminChanged(admin, _newAdmin);
-        admin = _newAdmin;
-    }
-
-    /// @notice Allows the admin to change the relayer address
-    /// @param _newRelayer The new relayer address
-    function setRelayer(address _newRelayer) external onlyAdmin {
-        require(_newRelayer != address(0), "Invalid relayer address");
-        emit RelayerChanged(relayer, _newRelayer);
-        relayer = _newRelayer;
-    }
-
-    /// @notice Creates a new GasStation contract using CREATE2
-    /// @param clientId The client ID
-    /// @return gasStationAddress The address of the created GasStation contract
-    function createGasStation(bytes32 clientId) external onlySigner(clientId) returns (address gasStationAddress) {
+    /// @notice Deploys a BeaconProxy via CREATE3, initializing with `clientId`.
+    function createGasStation(bytes32 clientId) external onlySigner(clientId) returns (address proxyAddr) {
+        require(gasStations[clientId] == address(0), "Already exists");
         bytes32 salt = keccak256(abi.encodePacked(clientId));
-        bytes memory bytecode =
-            abi.encodePacked(type(GasStation).creationCode, abi.encode(signerRegistry, admin, relayer));
 
-        gasStationAddress = CREATE3.deploy(salt, bytecode, 0);
-        emit GasStationCreated(clientId, gasStationAddress);
-        gasStations[clientId] = gasStationAddress;
+        // BeaconProxy constructor args: (beacon, initData)
+        bytes memory initData = abi.encodeWithSelector(GasStation.initialize.selector, clientId, relayer);
+        bytes memory beaconProxyCode =
+            abi.encodePacked(type(BeaconProxy).creationCode, abi.encode(gasStationBeacon, initData));
+
+        proxyAddr = CREATE3.deploy(salt, beaconProxyCode, 0);
+        gasStations[clientId] = proxyAddr;
+        emit GasStationCreated(clientId, proxyAddr);
     }
 
-    /// @notice Computes the address of the GasStation for the given clientId
-    /// @param clientId The client ID
-    /// @return gasStationAddress The address of the GasStation contract
+    /// @notice Compute address without deploying
     function computeAddress(bytes32 clientId) external view returns (address) {
         bytes32 salt = keccak256(abi.encodePacked(clientId));
         return CREATE3.getDeployed(salt);
     }
 
-    /// @notice Required override for UUPS upgradeable pattern
-    function _authorizeUpgrade(address newImplementation) internal override onlyAdmin {}
+    /// @notice Upgrade implementation behind all proxies
+    function upgradeGasStationImplementation(address newImpl) external onlyAdmin {
+        UpgradeableBeacon(gasStationBeacon).upgradeTo(newImpl);
+    }
+
+    function setAdmin(address newAdmin) external onlyAdmin {
+        require(newAdmin != address(0), "Invalid");
+        admin = newAdmin;
+        emit AdminChanged(admin, newAdmin);
+    }
+
+    function setRelayer(address newRelayer) external onlyAdmin {
+        require(newRelayer != address(0), "Invalid");
+        relayer = newRelayer;
+        emit RelayerChanged(relayer, newRelayer);
+    }
+
+    function _authorizeUpgrade(address) internal override onlyAdmin {}
 }
