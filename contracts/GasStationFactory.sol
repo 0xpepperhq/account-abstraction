@@ -39,10 +39,7 @@ contract GasStationFactory is Initializable, UUPSUpgradeable {
         _disableInitializers();
     }
 
-    function initialize(address _admin, address _relayer, address _signerRegistry)
-        external
-        initializer
-    {
+    function initialize(address _admin, address _relayer, address _signerRegistry) external initializer {
         require(_admin != address(0), "Invalid admin");
         require(_relayer != address(0), "Invalid relayer");
         require(_signerRegistry != address(0), "Invalid registry");

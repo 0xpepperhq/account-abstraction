@@ -39,12 +39,8 @@ contract GasStationFactoryTest is Test {
         // Deploy GasStationFactory with admin, relayer, and signerRegistry
         vm.startPrank(admin);
         GasStationFactory gasStationFactoryImpl = new GasStationFactory();
-        bytes memory initData = abi.encodeWithSignature(
-            "initialize(address,address,address)",
-            admin,
-            relayer,
-            address(signerRegistry)
-        );
+        bytes memory initData =
+            abi.encodeWithSignature("initialize(address,address,address)", admin, relayer, address(signerRegistry));
         GasStationFactoryProxy proxy = new GasStationFactoryProxy(address(gasStationFactoryImpl), initData);
         gasStationFactory = GasStationFactory(address(proxy));
 
