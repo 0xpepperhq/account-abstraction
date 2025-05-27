@@ -6,6 +6,8 @@ import {CREATE3} from "./utils/CREATE3.sol";
 import {ISignerRegistry} from "./interfaces/ISignerRegistry.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 
 contract WalletFactory is Initializable, UUPSUpgradeable {
     address public admin;
@@ -16,6 +18,9 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
 
     // Mapping from off-chain client ids and user IDs to wallet addresses
     mapping(bytes32 => mapping(bytes32 => address)) public wallets;
+
+    // slot for the beacon
+    address public walletBeaconAddress;
 
     // Events
     event WalletCreated(bytes32 indexed userId, bytes32 indexed clientId, address walletAddress);
@@ -53,7 +58,11 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
         relayer = _relayer;
         contractRegistry = _contractRegistry;
         signerRegistry = _signerRegistry;
-        walletInitCode = type(Wallet).creationCode;
+
+        UpgradeableBeacon walletBeacon = new UpgradeableBeacon(address(new Wallet()), _admin);
+
+        walletBeaconAddress = address(walletBeacon);
+        walletInitCode = type(BeaconProxy).creationCode;
     }
 
     /// @notice Creates a new Wallet using CREATE3 pattern and maps it to the off-chain user ID
@@ -96,14 +105,19 @@ contract WalletFactory is Initializable, UUPSUpgradeable {
     /// @param clientId The client ID for the UserWallet
     /// @return The initialization bytecode of the UserWallet
     function getUserWalletCreationCode(bytes32 clientId) internal view returns (bytes memory) {
-        return abi.encodePacked(walletInitCode, abi.encode(clientId, relayer, contractRegistry, signerRegistry));
+        return abi.encodePacked(
+            walletInitCode,
+            abi.encode(
+                walletBeaconAddress,
+                abi.encodeWithSelector(Wallet.initialize.selector, clientId, relayer, contractRegistry, signerRegistry)
+            )
+        );
     }
 
-    /// @notice Allows the admin to update the wallet initialization code
-    /// @param _walletInitCode The new wallet initialization code
-    /// @dev This function is only callable by the admin
-    function updateWalletCreationCode(bytes memory _walletInitCode) external onlyAdmin {
-        walletInitCode = _walletInitCode;
+    /// @notice Upgrade the Wallet logic for _all_ user wallets
+    /// @param newImpl The new implementation address
+    function upgradeWalletImplementation(address newImpl) external onlyAdmin {
+        UpgradeableBeacon(walletBeaconAddress).upgradeTo(newImpl);
     }
 
     /// @notice Allows the admin to change the admin address
