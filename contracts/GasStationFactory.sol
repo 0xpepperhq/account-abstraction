@@ -39,14 +39,13 @@ contract GasStationFactory is Initializable, UUPSUpgradeable {
         _disableInitializers();
     }
 
-    function initialize(address _admin, address _relayer, address _signerRegistry, address _initialGasStationImpl)
+    function initialize(address _admin, address _relayer, address _signerRegistry)
         external
         initializer
     {
         require(_admin != address(0), "Invalid admin");
         require(_relayer != address(0), "Invalid relayer");
         require(_signerRegistry != address(0), "Invalid registry");
-        require(_initialGasStationImpl != address(0), "Invalid impl");
 
         __UUPSUpgradeable_init();
 
@@ -55,7 +54,8 @@ contract GasStationFactory is Initializable, UUPSUpgradeable {
         signerRegistry = _signerRegistry;
 
         // Deploy beacon, admin controls upgrades
-        UpgradeableBeacon beacon = new UpgradeableBeacon(_initialGasStationImpl, _admin);
+        GasStation gasStation = new GasStation();
+        UpgradeableBeacon beacon = new UpgradeableBeacon(address(gasStation), address(this));
 
         gasStationBeacon = address(beacon);
     }
